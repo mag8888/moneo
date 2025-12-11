@@ -7,6 +7,7 @@ export interface IPlayer {
     dream?: string;
     token?: string;
     userId?: string; // Link to registered user
+    professionName?: string; // Assigned at game start
 }
 
 export interface IRoom extends Document {

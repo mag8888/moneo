@@ -1,5 +1,6 @@
 import { IPlayer } from '../models/room.model';
 import { CardManager, Card } from './card.manager';
+import { PROFESSIONS } from './professions';
 
 export interface GameState {
     roomId: string;
@@ -66,39 +67,32 @@ export class GameEngine {
     }
 
     initPlayer(p: IPlayer): PlayerState {
-        // TODO: Load profession stats
+        // Randomly assign a profession
+        const profession = PROFESSIONS[Math.floor(Math.random() * PROFESSIONS.length)];
+
         return {
             ...p,
-            cash: 3000,
+            professionName: profession.name,
+            cash: profession.savings,
             assets: [],
             liabilities: [],
             loanDebt: 0,
             position: 0,
             isFastTrack: false,
             childrenCount: 0,
-            childCost: 240,
-            salary: 3000,
+            childCost: profession.perChildCost,
+            salary: profession.salary,
             passiveIncome: 0,
-            income: 3000,
-            expenses: 2000,
-            cashflow: 1000,
+            income: profession.salary,
+            expenses: profession.expenses,
+            cashflow: profession.salary - profession.expenses,
             skippedTurns: 0
         };
     }
 
     private checkFastTrackCondition(player: PlayerState) {
         // "passive income covers expenses * 2 AND loans usually 0"
-        // We need a way to track Loan Amount. Currently we just have repayLoan logic.
-        // Let's assume player.liabilities has 'Bank Loan'.
-
-        // For now, simplify: if passiveIncome >= expenses * 2.
-        // And we need to ensure loans are paid. I'll add a 'hasLoans' check if I can track it.
-        // Let's add loan tracking to Player first properly if needed, but for now logic is:
-
         if (player.passiveIncome >= player.expenses * 2 && player.loanDebt === 0) {
-            // Check if loans exist
-            // Implementation detail: need to store loan liability specificially
-
             // Transition
             player.isFastTrack = true;
             player.position = 0; // Reset to start of Outer Track
@@ -228,8 +222,6 @@ export class GameEngine {
                     player.expenses += player.childCost;
                     player.cashflow = player.income - player.expenses;
                     // "3 разово выплачивается 5000$" - Assuming generic "Gift" based on Congratulations or Cost?
-                    // Usually Baby is a Cost. But prompt says "Payout and Congrats". 
-                    // Let's Give $5000 as a "Gift" for now based on "Congratulations".
                     player.cash += 5000;
 
                     this.state.log.push(`👶 Baby Born! (Roll: ${roll}). +$5000 Gift. Expenses +$${player.childCost}/mo`);

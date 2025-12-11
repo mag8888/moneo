@@ -24,6 +24,7 @@ interface PlayerState {
     salary: number;
     passiveIncome: number;
     token?: string;
+    professionName?: string;
 }
 
 export default function GameBoard({ roomId, initialState }: BoardProps) {
@@ -125,10 +126,20 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                 <div className="bg-[#151b2b] rounded-2xl p-4 border border-slate-800 shadow-lg">
                     <div className="flex justify-between items-center mb-4">
                         <div className="flex items-center gap-2">
+                            <span className="text-2xl">👷</span>
+                            <div className="flex flex-col">
+                                <span className="text-[10px] text-slate-500 uppercase tracking-wider leading-none">Профессия</span>
+                                <span className="font-bold text-slate-200 leading-tight">{me.professionName || 'Безработный'}</span>
+                            </div>
+                        </div>
+                        <span className="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-1 rounded border border-blue-500/20">Активен</span>
+                    </div>
+
+                    <div className="flex justify-between items-center mb-4 pt-4 border-t border-slate-800/50">
+                        <div className="flex items-center gap-2">
                             <span className="text-2xl">🏦</span>
                             <span className="font-bold text-slate-200">Банк</span>
                         </div>
-                        <span className="text-[10px] bg-green-500/10 text-green-400 px-2 py-1 rounded border border-green-500/20">Активен</span>
                     </div>
                     <div className="text-center mb-6">
                         <div className="text-4xl font-bold text-green-400 mb-1 tracking-tight">${me.cash?.toLocaleString()}</div>
