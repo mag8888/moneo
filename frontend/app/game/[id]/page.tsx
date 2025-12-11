@@ -95,7 +95,11 @@ export default function GameRoom() {
     }, [roomId]);
 
     const toggleReady = () => {
-        socket.emit('player_ready', { roomId, isReady: !isReady, dream, token }, (res: any) => {
+        const userStr = localStorage.getItem('user');
+        const user = userStr ? JSON.parse(userStr) : {};
+        const userId = user._id || user.id || 'guest-' + Math.random();
+
+        socket.emit('player_ready', { roomId, isReady: !isReady, dream, token, userId }, (res: any) => {
             if (!res.success) alert(res.error);
         });
     };
@@ -253,7 +257,10 @@ export default function GameRoom() {
                                                     onClick={() => {
                                                         if (!isReady) {
                                                             setToken(t);
-                                                            socket.emit('player_ready', { roomId, isReady, dream, token: t });
+                                                            const userStr = localStorage.getItem('user');
+                                                            const user = userStr ? JSON.parse(userStr) : {};
+                                                            const userId = user._id || user.id || 'guest-' + Math.random();
+                                                            socket.emit('player_ready', { roomId, isReady, dream, token: t, userId });
                                                         }
                                                     }}
                                                     className={`
@@ -293,7 +300,10 @@ export default function GameRoom() {
                                             onChange={(e) => {
                                                 const newDream = e.target.value;
                                                 setDream(newDream);
-                                                socket.emit('player_ready', { roomId, isReady, dream: newDream, token });
+                                                const userStr = localStorage.getItem('user');
+                                                const user = userStr ? JSON.parse(userStr) : {};
+                                                const userId = user._id || user.id || 'guest-' + Math.random();
+                                                socket.emit('player_ready', { roomId, isReady, dream: newDream, token, userId });
                                             }}
                                             className="w-full bg-black/20 border border-white/10 rounded-2xl px-6 py-4 appearance-none outline-none focus:border-blue-500/50 focus:bg-black/40 transition-all text-lg font-medium text-slate-200 shadow-inner"
                                             disabled={isReady}

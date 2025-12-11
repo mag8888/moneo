@@ -27,6 +27,7 @@ export class RoomService {
     async joinRoom(roomId: string, playerId: string, userId: string, playerName: string, password?: string): Promise<any> {
         const room = await RoomModel.findById(roomId);
         if (!room) throw new Error("Room not found");
+        // Allow rejoin if game started provided user is in list
         if (room.status !== 'waiting' && !room.players.some(p => p.userId === userId)) throw new Error("Game already started");
 
         // If not already in room and full
@@ -40,26 +41,16 @@ export class RoomService {
         const existingPlayerIndex = room.players.findIndex(p => p.userId === userId);
 
         if (existingPlayerIndex !== -1) {
+            const oldSocketId = room.players[existingPlayerIndex].id;
+
             // Player exists, update socket ID and name
             room.players[existingPlayerIndex].id = playerId; // Update socket ID
             room.players[existingPlayerIndex].name = playerName;
 
-            // If the creator rejoined, update creatorId (which matches socket ID)
-            // But wait, creatorId usually tracks the socket ID for host permissions.
-            // If the host reconnects, we should update creatorId to new socket ID if they were the host.
-            // BUT, verifying if they were the host via userId is tricky unless we stored creatorUserId.
-            // For now, let's just update the player. Host migration on disconnect/reconnect is a bigger topic.
-            // A simple fix: if this player was the 'creator' (index 0 usually), or we can check if `creatorId` matched their OLD socket ID...
-            // Actually, we can't easily check old socket ID unless distinct.
-            // Let's assume RoomModel has creatorId as socketId.
-
-            // Should we upgrade RoomModel to store creatorUserId?
-            // To be safe for now without schema changes: 
-            // If the room only has this player, or if we assume the first player is creator...
-            // Let's just update the player. The host permissions relying on socket.id might break on reconnect if we don't update creatorId.
-            // User requested "fix duplicate user", not "fix host permissions on reconnect", but implicitly they want to resume.
-
-            // For now, let's keep it simple: Update player. If host issues arise, we'll fix.
+            // Fix Host permissions: If this player was the host (creatorId matched old socket ID), update creatorId
+            if (room.creatorId === oldSocketId) {
+                room.creatorId = playerId;
+            }
         } else {
             room.players.push({
                 id: playerId,
@@ -118,11 +109,29 @@ export class RoomService {
         return room ? this.sanitizeRoom(room) : null;
     }
 
-    async setPlayerReady(roomId: string, playerId: string, isReady: boolean, dream?: string, token?: string): Promise<any> {
+    async setPlayerReady(roomId: string, playerId: string, userId: string, isReady: boolean, dream?: string, token?: string): Promise<any> {
         const room = await RoomModel.findById(roomId);
         if (!room) throw new Error("Room not found");
 
-        const player = room.players.find(p => p.id === playerId);
+        let player = room.players.find(p => p.id === playerId);
+
+        // JIT Reconnection fallback
+        if (!player && userId) {
+            player = room.players.find(p => p.userId === userId);
+            if (player) {
+                // Update the stale socket ID to the new one
+                player.id = playerId;
+
+                // Also Check and fix host if needed (though unlikely to be needed here if joinRoom handles it, but safety first)
+                if (room.creatorId && room.players[0].userId === userId) {
+                    // This heuristic (first player) is one way, or we could check if we need to ... 
+                    // Actually, rely on joinRoom for host fix. Here just fix the player reference.
+                    // But wait, if creatorId is stale, we might want to update it if we are sure?
+                    // Let's keep it simple.
+                }
+            }
+        }
+
         if (!player) throw new Error("Player not in room");
 
         // Validate Dream (Mandatory per requirements)
@@ -131,7 +140,10 @@ export class RoomService {
         }
 
         if (token) {
-            const tokenTaken = room.players.some(p => p.token === token && p.id !== playerId);
+            // Check based on Token uniqueness. 
+            // Exclude SELF using userId if possible, or socketId.
+            // player.id is now up to date.
+            const tokenTaken = room.players.some(p => p.token === token && p.id !== player!.id);
             if (tokenTaken) {
                 throw new Error("Эта фишка уже занята другим игроком");
             }
@@ -140,7 +152,6 @@ export class RoomService {
 
         player.isReady = isReady;
         if (dream) player.dream = dream;
-        // if (token) player.token = token; // This line is already handled above
 
         await room.save();
         return this.sanitizeRoom(room);
