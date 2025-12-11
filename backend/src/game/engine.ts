@@ -252,7 +252,7 @@ export class GameEngine {
         if (!player || !card || card.type !== 'MARKET') return;
 
         // Determine cost (Use Down Payment if available, else full cost)
-        const costToPay = card.downPayment !== undefined ? card.downPayment : card.cost;
+        const costToPay = card.downPayment !== undefined ? card.downPayment : (card.cost || 0);
 
         if (player.cash < costToPay) {
             this.state.log.push(`${player.name} cannot afford ${card.title} ($${costToPay})`);
@@ -276,8 +276,8 @@ export class GameEngine {
         }
 
         // Add Liability (Mortgage) if downpayment was used
-        if (card.downPayment !== undefined && card.cost > card.downPayment) {
-            const mortgage = card.cost - card.downPayment;
+        if (card.downPayment !== undefined && (card.cost || 0) > card.downPayment) {
+            const mortgage = (card.cost || 0) - card.downPayment;
             player.liabilities.push({ name: `Mortgage (${card.title})`, value: mortgage });
             // Usually mortgages in this game don't add monthly interest expense directly, 
             // it's factored into the Net Cashflow of the property.
