@@ -1,43 +1,124 @@
 "use client";
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const router = useRouter();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleAuth = async (type: 'login' | 'register') => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/${type}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || 'Auth failed');
+
+      // Save to localStorage (simple persist)
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      router.push('/lobby');
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const loginAs = (u: string) => {
+    setUsername(u);
+    setPassword('123'); // Default password for test users
+    // Small timeout to allow state update then submit
+    setTimeout(() => {
+      // We can't easily rely on state update here in strict mode, so just call directly
+      authDirect(u, '123');
+    }, 100);
+  };
+
+  const authDirect = async (u: string, p: string) => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: u, password: p })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      router.push('/lobby');
+    } catch (e: any) {
+      setError(e.message);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-4">
-      <div className="max-w-2xl text-center space-y-8">
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 opacity-30 pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600 rounded-full blur-3xl filter opacity-50 animate-pulse"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600 rounded-full blur-3xl filter opacity-50 animate-pulse delay-1000"></div>
+      <div className="max-w-md w-full space-y-8 bg-slate-800 p-8 rounded-2xl shadow-2xl border border-slate-700">
+
+        <div className="text-center">
+          <h1 className="text-4xl font-extrabold bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent drop-shadow-md mb-2">
+            ENERGY OF MONEY
+          </h1>
+          <p className="text-slate-400">Вход в систему</p>
         </div>
 
-        <h1 className="text-6xl font-extrabold bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent drop-shadow-lg">
-          ENERGY OF MONEY
-        </h1>
+        {error && <div className="bg-red-500/20 text-red-300 p-3 rounded mb-4 text-sm text-center">{error}</div>}
 
-        <p className="text-xl text-slate-300">
-          Образовательная игра-стратегия на основе CashFlow в квантовом поле.
-        </p>
+        <div className="space-y-4">
+          <input
+            type="text"
+            placeholder="Имя пользователя"
+            className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 outline-none focus:border-blue-500 transition-colors"
+            value={username}
+            onChange={e => setUsername(e.target.value)}
+          />
+          <input
+            type="password"
+            placeholder="Пароль"
+            className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 outline-none focus:border-blue-500 transition-colors"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+          />
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-          <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 hover:border-yellow-500 transition-all cursor-pointer group" onClick={() => router.push('/lobby')}>
-            <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">🎲</div>
-            <h2 className="text-2xl font-bold mb-2">Играть</h2>
-            <p className="text-slate-400 text-sm">Присоединиться к комнате или создать новую</p>
+        <div className="grid grid-cols-2 gap-4">
+          <button
+            onClick={() => handleAuth('login')}
+            className="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-lg font-bold transition-colors shadow-lg shadow-blue-900/20"
+          >
+            Войти
+          </button>
+          <button
+            onClick={() => handleAuth('register')}
+            className="w-full bg-slate-700 hover:bg-slate-600 py-3 rounded-lg font-bold transition-colors border border-slate-600"
+          >
+            Регистрация
+          </button>
+        </div>
+
+        <div className="relative border-t border-slate-700 pt-6 mt-6">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800 px-2 text-slate-500 text-xs uppercase tracking-wider">
+            Тестовые игроки
           </div>
-
-          <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 hover:border-blue-500 transition-all cursor-pointer group" onClick={() => window.open('https://t.me/energy_m_bot', '_blank')}>
-            <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">🤖</div>
-            <h2 className="text-2xl font-bold mb-2">Telegram Бот</h2>
-            <p className="text-slate-400 text-sm">Обучение, сообщество и заработок</p>
+          <div className="grid grid-cols-3 gap-2">
+            {['Masha', 'Pttia', 'Sasha'].map(u => (
+              <button
+                key={u}
+                onClick={() => loginAs(u)}
+                className="bg-slate-700/50 hover:bg-slate-700 border border-slate-600 hover:border-yellow-500/50 py-2 rounded-lg text-sm transition-all"
+              >
+                {u}
+              </button>
+            ))}
           </div>
         </div>
 
-        <footer className="mt-16 text-slate-500 text-sm">
-          &copy; 2025 Energy of Money. All rights reserved.
-        </footer>
       </div>
     </div>
   );

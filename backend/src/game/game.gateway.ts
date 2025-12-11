@@ -18,15 +18,16 @@ export class GameGateway {
             console.log('Client connected:', socket.id);
 
             // Get available rooms
-            socket.on('get_rooms', (callback) => {
-                callback(this.roomService.getRooms());
+            socket.on('get_rooms', async (callback) => {
+                const rooms = await this.roomService.getRooms();
+                callback(rooms);
             });
 
             // Create Room
-            socket.on('create_room', (data, callback) => {
+            socket.on('create_room', async (data, callback) => {
                 try {
                     const { name, maxPlayers, timer, password, playerName } = data;
-                    const room = this.roomService.createRoom(
+                    const room = await this.roomService.createRoom(
                         socket.id,
                         playerName || 'Player',
                         name,
@@ -35,7 +36,8 @@ export class GameGateway {
                         password
                     );
                     socket.join(room.id);
-                    this.io.emit('rooms_updated', this.roomService.getRooms()); // Broadcast update
+                    const rooms = await this.roomService.getRooms();
+                    this.io.emit('rooms_updated', rooms); // Broadcast update
                     callback({ success: true, room });
                 } catch (e: any) {
                     callback({ success: false, error: e.message });
@@ -43,14 +45,15 @@ export class GameGateway {
             });
 
             // Join Room
-            socket.on('join_room', (data, callback) => {
+            socket.on('join_room', async (data, callback) => {
                 try {
                     const { roomId, password, playerName } = data;
-                    const room = this.roomService.joinRoom(roomId, socket.id, playerName || 'Player', password);
+                    const room = await this.roomService.joinRoom(roomId, socket.id, playerName || 'Player', password);
                     socket.join(roomId);
                     this.io.to(roomId).emit('room_state_updated', room);
-                    // Also broadcast to lobby that room headcount changed
-                    this.io.emit('rooms_updated', this.roomService.getRooms());
+
+                    const rooms = await this.roomService.getRooms();
+                    this.io.emit('rooms_updated', rooms);
                     callback({ success: true, room });
                 } catch (e: any) {
                     callback({ success: false, error: e.message });
@@ -58,26 +61,24 @@ export class GameGateway {
             });
 
             // Leave Room
-            socket.on('leave_room', (data) => {
+            socket.on('leave_room', async (data) => {
                 const { roomId } = data;
-                this.roomService.leaveRoom(roomId, socket.id);
+                await this.roomService.leaveRoom(roomId, socket.id);
                 socket.leave(roomId);
-                const room = this.roomService.getRoom(roomId);
+                const room = await this.roomService.getRoom(roomId);
                 if (room) {
                     this.io.to(roomId).emit('room_state_updated', room);
                 }
-                this.io.emit('rooms_updated', this.roomService.getRooms());
+                const rooms = await this.roomService.getRooms();
+                this.io.emit('rooms_updated', rooms);
             });
 
             // Player Ready
-            socket.on('player_ready', (data, callback) => {
+            socket.on('player_ready', async (data, callback) => {
                 try {
                     const { roomId, isReady, dream, token } = data;
-                    const room = this.roomService.setPlayerReady(roomId, socket.id, isReady, dream, token);
+                    const room = await this.roomService.setPlayerReady(roomId, socket.id, isReady, dream, token);
                     this.io.to(roomId).emit('room_state_updated', room);
-
-                    // Check if all ready -> Enable Start Button (or auto start?)
-                    // For now, just state update, client handles "Start" button visibility for creator
                     callback({ success: true });
                 } catch (e: any) {
                     callback({ success: false, error: e.message });
@@ -85,21 +86,23 @@ export class GameGateway {
             });
 
             // Start Game
-            socket.on('start_game', (data) => {
+            socket.on('start_game', async (data) => {
                 const { roomId } = data;
                 // Verify is creator
-                const room = this.roomService.getRoom(roomId);
-                if (room && room.players[0].id === socket.id) { // Simply check first player
-                    if (this.roomService.checkAllReady(roomId)) {
-                        this.roomService.startGame(roomId);
+                const room = await this.roomService.getRoom(roomId);
+                if (room && room.players[0].id === socket.id) {
+                    const allReady = await this.roomService.checkAllReady(roomId);
+                    if (allReady) {
+                        await this.roomService.startGame(roomId);
 
                         // Init Engine
                         const engine = new GameEngine(roomId, room.players);
                         this.games.set(roomId, engine);
 
                         this.io.to(roomId).emit('game_started', { roomId, state: engine.getState() });
-                        // Broadcast lobby update (room no longer waiting)
-                        this.io.emit('rooms_updated', this.roomService.getRooms());
+
+                        const rooms = await this.roomService.getRooms();
+                        this.io.emit('rooms_updated', rooms);
                     }
                 }
             });

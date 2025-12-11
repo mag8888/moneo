@@ -1,14 +1,39 @@
 import crypto from 'crypto';
+import { UserModel } from '../models/user.model';
 
 export class AuthService {
     constructor() { }
 
     /**
-     * Verifies the Telegram Web App init data.
-     * @param initData The raw initData string from Telegram Web App
-     * @returns User object if valid, null otherwise
+     * Registers a new user
      */
-    verifyTelegramAuth(initData: string): any {
+    async register(username: string, password: string): Promise<any> {
+        const existingUser = await UserModel.findOne({ username });
+        if (existingUser) {
+            throw new Error('User already exists');
+        }
+
+        const newUser = await UserModel.create({
+            username,
+            password, // In a real app, hash this!
+            first_name: username
+        });
+
+        return newUser;
+    }
+
+    /**
+     * Logs in a user
+     */
+    async login(username: string, password: string): Promise<any> {
+        const user = await UserModel.findOne({ username, password });
+        return user;
+    }
+
+    /**
+     * Verifies the Telegram Web App init data.
+     */
+    async verifyTelegramAuth(initData: string): Promise<any> {
         const token = process.env.TELEGRAM_BOT_TOKEN;
         if (!token) throw new Error("Bot token not configured");
 
@@ -31,7 +56,21 @@ export class AuthService {
             // Valid
             const userStr = urlParams.get('user');
             if (userStr) {
-                return JSON.parse(userStr);
+                const tgUser = JSON.parse(userStr);
+
+                // Find or create in DB
+                let user = await UserModel.findOne({ telegram_id: tgUser.id });
+                if (!user) {
+                    user = await UserModel.create({
+                        telegram_id: tgUser.id,
+                        username: tgUser.username || `tg_${tgUser.id}`,
+                        first_name: tgUser.first_name,
+                        last_name: tgUser.last_name,
+                        photo_url: tgUser.photo_url
+                    });
+                }
+
+                return user;
             }
         }
         return null;

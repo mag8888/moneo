@@ -7,10 +7,16 @@ import { BotService } from './bot/bot.service';
 import { AuthController } from './auth/auth.controller';
 import { GameGateway } from './game/game.gateway';
 
+import { connectDatabase } from './database';
+
 dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
+
+// Connect to Database
+connectDatabase();
+
 const io = new Server(httpServer, {
     cors: {
         origin: "*",

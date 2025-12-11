@@ -4,14 +4,44 @@ import { AuthService } from './auth.service';
 const router = Router();
 const authService = new AuthService();
 
-router.post('/login/telegram', (req: Request, res: Response) => {
+router.post('/register', async (req: Request, res: Response) => {
+    try {
+        const { username, password } = req.body;
+        if (!username || !password) return res.status(400).json({ error: "Missing fields" });
+
+        const user = await authService.register(username, password);
+        return res.json({
+            token: "mock-jwt-token-for-" + user.id,
+            user: { id: user.id, username: user.username, firstName: user.first_name }
+        });
+    } catch (e: any) {
+        return res.status(400).json({ error: e.message });
+    }
+});
+
+router.post('/login', async (req: Request, res: Response) => {
+    try {
+        const { username, password } = req.body;
+        const user = await authService.login(username, password);
+        if (!user) return res.status(401).json({ error: "Invalid credentials" });
+
+        return res.json({
+            token: "mock-jwt-token-for-" + user.id,
+            user: { id: user.id, username: user.username, firstName: user.first_name }
+        });
+    } catch (e: any) {
+        return res.status(500).json({ error: e.message });
+    }
+});
+
+router.post('/login/telegram', async (req: Request, res: Response) => {
     try {
         const { initData } = req.body;
         if (!initData) {
             return res.status(400).json({ error: "Missing initData" });
         }
 
-        const user = authService.verifyTelegramAuth(initData);
+        const user = await authService.verifyTelegramAuth(initData);
 
         if (!user) {
             return res.status(401).json({ error: "Invalid Telegram credentials" });

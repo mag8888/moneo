@@ -1,97 +1,86 @@
 import { v4 as uuidv4 } from 'uuid';
-
-export interface Player {
-    id: string; // Socket ID or User ID
-    name: string;
-    isReady: boolean;
-    dream?: string; // Selected Dream
-    profession?: string; // Assigned Profession
-    token?: string; // Selected Token (1-10)
-}
-
-export interface Room {
-    id: string;
-    name: string;
-    creatorId: string;
-    players: Player[];
-    maxPlayers: number;
-    status: 'waiting' | 'playing' | 'finished';
-    timer: number; // Seconds per turn
-    password?: string;
-    createdAt: number;
-}
+import { RoomModel, IRoom } from '../models/room.model';
 
 export class RoomService {
-    private rooms: Map<string, Room> = new Map();
 
-    createRoom(creatorId: string, creatorName: string, name: string, maxPlayers: number = 6, timer: number = 120, password?: string): Room {
-        const roomId = uuidv4().substring(0, 6).toUpperCase(); // Short ID
-        const room: Room = {
-            id: roomId,
+    constructor() { }
+
+    async createRoom(creatorId: string, playerName: string, name: string, maxPlayers: number = 6, timer: number = 120, password?: string): Promise<any> {
+        const room = await RoomModel.create({
             name,
-            creatorId,
-            players: [{
-                id: creatorId,
-                name: creatorName,
-                isReady: false
-            }],
+            creatorId, // Keep creatorId for now, as it's in the original interface, though not directly used in the new model's top level.
             maxPlayers,
-            status: 'waiting',
             timer,
             password,
+            players: [{
+                id: creatorId,
+                name: playerName,
+                isReady: false
+            }],
+            status: 'waiting', // Add status and createdAt as they are part of the Room interface
             createdAt: Date.now()
-        };
-        this.rooms.set(roomId, room);
-        return room;
+        });
+        return this.sanitizeRoom(room);
     }
 
-    joinRoom(roomId: string, playerId: string, playerName: string, password?: string): Room {
-        const room = this.rooms.get(roomId);
+    async joinRoom(roomId: string, playerId: string, playerName: string, password?: string): Promise<any> {
+        const room = await RoomModel.findById(roomId);
         if (!room) throw new Error("Room not found");
         if (room.status !== 'waiting') throw new Error("Game already started");
         if (room.players.length >= room.maxPlayers) throw new Error("Room is full");
         if (room.password && room.password !== password) throw new Error("Invalid password");
 
-        // Idempotency: If already in room, just return (handle rejoin)
-        const existingPlayer = room.players.find(p => p.id === playerId);
-        if (existingPlayer) {
-            return room;
+        // Idempotency: if player already in room, just update name/socket
+        const existingPlayerIndex = room.players.findIndex(p => p.id === playerId);
+
+        if (existingPlayerIndex !== -1) {
+            room.players[existingPlayerIndex].name = playerName;
+        } else {
+            room.players.push({
+                id: playerId,
+                name: playerName,
+                isReady: false
+            });
         }
 
-        room.players.push({
-            id: playerId,
-            name: playerName,
-            isReady: false
+        await room.save();
+        return this.sanitizeRoom(room);
+    }
+
+    async leaveRoom(roomId: string, playerId: string): Promise<void> {
+        // We use $pull to remove the player
+        await RoomModel.findByIdAndUpdate(roomId, {
+            $pull: { players: { id: playerId } }
         });
-        return room;
-    }
 
-    leaveRoom(roomId: string, playerId: string): void {
-        const room = this.rooms.get(roomId);
-        if (!room) return;
-
-        room.players = room.players.filter(p => p.id !== playerId);
-
-        // If creator leaves or room empty, close room
-        if (room.players.length === 0) {
-            this.rooms.delete(roomId);
-        } else if (room.creatorId === playerId) {
-            // Assign new creator? Or close? For now, simplify: close if creator leaves
-            // this.rooms.delete(roomId);
-            room.creatorId = room.players[0].id; // Promote next player
+        // Check if room is empty, if so, maybe delete? 
+        // For now let's keep it simple. If we want to auto-delete empty rooms:
+        const room = await RoomModel.findById(roomId);
+        if (room && room.players.length === 0) {
+            await RoomModel.findByIdAndDelete(roomId);
+        } else if (room && room.creatorId === playerId) {
+            // If creator leaves, promote next player
+            if (room.players.length > 0) {
+                room.creatorId = room.players[0].id;
+                await room.save();
+            } else {
+                // If no players left, room will be deleted by the previous check
+            }
         }
     }
 
-    getRooms(): Room[] {
-        return Array.from(this.rooms.values()).filter(r => r.status === 'waiting');
+    async getRooms(): Promise<any[]> {
+        const rooms = await RoomModel.find({ status: 'waiting' }).sort({ createdAt: -1 });
+        return rooms.map(r => this.sanitizeRoom(r));
     }
 
-    getRoom(roomId: string): Room | undefined {
-        return this.rooms.get(roomId);
+    async getRoom(roomId: string): Promise<any> {
+        const room = await RoomModel.findById(roomId);
+        return room ? this.sanitizeRoom(room) : null;
     }
 
-    setPlayerReady(roomId: string, playerId: string, isReady: boolean, dream?: string, token?: string): Room {
-        const room = this.rooms.get(roomId);
+    async setPlayerReady(roomId: string, playerId: string, isReady: boolean, dream?: string, token?: string): Promise<any> {
+        const room = await RoomModel.findById(roomId);
         if (!room) throw new Error("Room not found");
 
         const player = room.players.find(p => p.id === playerId);
@@ -103,7 +92,7 @@ export class RoomService {
         }
 
         if (token) {
-            const tokenTaken = room.players.some(p => p.id !== playerId && p.token === token);
+            const tokenTaken = room.players.some(p => p.token === token && p.id !== playerId);
             if (tokenTaken) {
                 throw new Error("Эта фишка уже занята другим игроком");
             }
@@ -112,20 +101,28 @@ export class RoomService {
 
         player.isReady = isReady;
         if (dream) player.dream = dream;
+        // if (token) player.token = token; // This line is already handled above
 
-        return room;
+        await room.save();
+        return this.sanitizeRoom(room);
     }
 
-    checkAllReady(roomId: string): boolean {
-        const room = this.rooms.get(roomId);
-        if (!room) return false;
-        return room.players.length > 0 && room.players.every(p => p.isReady);
+    async checkAllReady(roomId: string): Promise<boolean> {
+        const room = await RoomModel.findById(roomId);
+        if (!room || room.players.length === 0) return false;
+        return room.players.every(p => p.isReady);
     }
 
-    startGame(roomId: string): Room {
-        const room = this.rooms.get(roomId);
-        if (!room) throw new Error("Room not found");
-        room.status = 'playing';
-        return room;
+    async startGame(roomId: string): Promise<void> {
+        await RoomModel.findByIdAndUpdate(roomId, { status: 'playing' });
+    }
+
+    // Helper to format room for frontend (convert _id to id)
+    private sanitizeRoom(room: any): any {
+        const obj = room.toObject ? room.toObject() : room;
+        obj.id = obj._id.toString();
+        delete obj._id;
+        delete obj.__v;
+        return obj;
     }
 }

@@ -35,7 +35,11 @@ export default function GameRoom() {
     useEffect(() => {
         if (!roomId) return;
 
-        socket.emit('join_room', { roomId }, (response: any) => {
+        const userStr = localStorage.getItem('user');
+        const user = userStr ? JSON.parse(userStr) : {};
+        const playerName = user.firstName || user.username || 'Guest';
+
+        socket.emit('join_room', { roomId, playerName }, (response: any) => {
             if (response.success) {
                 setRoom(response.room);
             } else {
@@ -52,8 +56,8 @@ export default function GameRoom() {
             if (me) setIsReady(me.isReady);
         });
 
-        socket.on('game_started', () => {
-            alert("Game Started! (Logic pending)");
+        socket.on('game_started', (data) => {
+            setRoom(prev => prev ? { ...prev, status: 'playing' } : null);
         });
 
         return () => {

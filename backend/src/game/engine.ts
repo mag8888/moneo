@@ -1,4 +1,4 @@
-import { Room, Player } from './room.service';
+import { IPlayer } from '../models/room.model';
 import { CardManager, Card } from './card.manager';
 
 export interface GameState {
@@ -13,7 +13,7 @@ export interface GameState {
     winner?: string;
 }
 
-export interface PlayerState extends Player {
+export interface PlayerState extends IPlayer {
     cash: number;
     cashflow: number;
     income: number;
@@ -52,7 +52,7 @@ export class GameEngine {
     state: GameState;
     cardManager: CardManager;
 
-    constructor(roomId: string, players: Player[]) {
+    constructor(roomId: string, players: IPlayer[]) {
         this.cardManager = new CardManager();
         this.state = {
             roomId,
@@ -65,7 +65,7 @@ export class GameEngine {
         };
     }
 
-    initPlayer(p: Player): PlayerState {
+    initPlayer(p: IPlayer): PlayerState {
         // TODO: Load profession stats
         return {
             ...p,
