@@ -37,18 +37,34 @@ export default function GameRoom() {
     useEffect(() => {
         if (!roomId) return;
 
-        const userStr = localStorage.getItem('user');
-        const user = userStr ? JSON.parse(userStr) : {};
-        const playerName = user.firstName || user.username || 'Guest';
-        const userId = user._id || user.id || 'guest-' + Math.random(); // Ensure userId is sent
+        const joinGame = () => {
+            const userStr = localStorage.getItem('user');
+            const user = userStr ? JSON.parse(userStr) : {};
+            const playerName = user.firstName || user.username || 'Guest';
+            const userId = user._id || user.id || 'guest-' + Math.random();
 
-        socket.emit('join_room', { roomId, playerName, userId }, (response: any) => {
-            if (response.success) {
-                setRoom(response.room);
-            } else {
-                alert("Error joining room: " + response.error);
-                router.push('/lobby');
-            }
+            console.log("Joining room...", { roomId, playerName, userId });
+
+            socket.emit('join_room', { roomId, playerName, userId }, (response: any) => {
+                if (response.success) {
+                    setRoom(response.room);
+                } else {
+                    console.error("Error joining room:", response.error);
+                    // Don't redirect immediately on reconnect error, might be transient
+                    if (socket.connected) {
+                        alert("Error joining room: " + response.error);
+                        router.push('/lobby');
+                    }
+                }
+            });
+        };
+
+        joinGame();
+
+        // Auto-rejoin on reconnection
+        socket.on('connect', () => {
+            console.log("Socket reconnected, re-joining room...");
+            joinGame();
         });
 
         socket.on('room_state_updated', (updatedRoom: Room) => {
@@ -71,6 +87,7 @@ export default function GameRoom() {
 
         return () => {
             socket.emit('leave_room', { roomId });
+            socket.off('connect');
             socket.off('room_state_updated');
             socket.off('game_started');
             socket.off('player_kicked');
