@@ -117,7 +117,31 @@ export class GameGateway {
                 const game = this.games.get(roomId);
                 if (game) {
                     try {
-                        game.takeLoan(amount);
+                        game.takeLoan(socket.id, amount);
+                        this.io.to(roomId).emit('state_updated', { state: game.getState() });
+                    } catch (e: any) {
+                        socket.emit('error', e.message);
+                    }
+                }
+            });
+
+            socket.on('repay_loan', ({ roomId, amount }) => {
+                const game = this.games.get(roomId);
+                if (game) {
+                    try {
+                        game.repayLoan(socket.id, amount);
+                        this.io.to(roomId).emit('state_updated', { state: game.getState() });
+                    } catch (e: any) {
+                        socket.emit('error', e.message);
+                    }
+                }
+            });
+
+            socket.on('buy_asset', ({ roomId }) => {
+                const game = this.games.get(roomId);
+                if (game) {
+                    try {
+                        game.buyAsset(socket.id);
                         this.io.to(roomId).emit('state_updated', { state: game.getState() });
                     } catch (e: any) {
                         socket.emit('error', e.message);

@@ -176,9 +176,8 @@ export class GameEngine {
         if (square.type === 'MARKET') {
             const card = this.cardManager.drawMarket();
             this.state.currentCard = card;
-            this.state.log.push(`Event: ${card.title}`);
-            // Logic to apply market effect immediately or wait for user action?
-            // For now, auto-apply non-choice events, wait for choice.
+            this.state.log.push(`Opportunity: ${card.title}`);
+            // Wait for user action (buy_asset or end_turn/pass)
         } else if (square.type === 'EXPENSE') {
             const card = this.cardManager.drawExpense();
             this.state.currentCard = card;
@@ -244,6 +243,49 @@ export class GameEngine {
 
         // Check Fast Track after repaying loan (might free up cashflow condition)
         this.checkFastTrackCondition(player);
+    }
+
+    buyAsset(playerId: string) {
+        const player = this.state.players.find(p => p.id === playerId);
+        const card = this.state.currentCard;
+
+        if (!player || !card || card.type !== 'MARKET') return;
+
+        // Determine cost (Use Down Payment if available, else full cost)
+        const costToPay = card.downPayment !== undefined ? card.downPayment : card.cost;
+
+        if (player.cash < costToPay) {
+            this.state.log.push(`${player.name} cannot afford ${card.title} ($${costToPay})`);
+            return;
+        }
+
+        player.cash -= costToPay;
+
+        // Add Asset
+        player.assets.push({
+            title: card.title,
+            cost: card.cost,
+            cashflow: card.cashflow || 0
+        });
+
+        // Update Stats
+        if (card.cashflow) {
+            player.passiveIncome += card.cashflow;
+            player.income = player.salary + player.passiveIncome;
+            player.cashflow = player.income - player.expenses;
+        }
+
+        // Add Liability (Mortgage) if downpayment was used
+        if (card.downPayment !== undefined && card.cost > card.downPayment) {
+            const mortgage = card.cost - card.downPayment;
+            player.liabilities.push({ name: `Mortgage (${card.title})`, value: mortgage });
+            // Usually mortgages in this game don't add monthly interest expense directly, 
+            // it's factored into the Net Cashflow of the property.
+        }
+
+        this.state.log.push(`${player.name} bought ${card.title}. Passive Income +$${card.cashflow || 0}`);
+        this.checkFastTrackCondition(player);
+        this.endTurn();
     }
 
     endTurn() {

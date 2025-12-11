@@ -159,18 +159,46 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
 
                                 {state.currentCard.cost && (
                                     <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-8">
-                                        <div className="text-sm text-red-300 uppercase tracking-widest mb-1">Сумма к оплате</div>
-                                        <div className="text-4xl text-red-500 font-mono font-bold">-${state.currentCard.cost.toLocaleString()}</div>
+                                        <div className="text-sm text-red-300 uppercase tracking-widest mb-1">
+                                            {state.currentCard.downPayment ? 'Первый взнос' : 'Цена'}
+                                        </div>
+                                        <div className="text-4xl text-red-500 font-mono font-bold">
+                                            -${(state.currentCard.downPayment ?? state.currentCard.cost).toLocaleString()}
+                                        </div>
+                                        {state.currentCard.cashflow && (
+                                            <div className="mt-2 text-green-400 font-mono">
+                                                CF: +${state.currentCard.cashflow}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 
                                 {isMyTurn ? (
-                                    <button
-                                        onClick={handleEndTurn}
-                                        className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-4 px-8 rounded-xl text-xl shadow-lg transition-transform active:scale-95"
-                                    >
-                                        OK, ПОНЯТНО
-                                    </button>
+                                    <div className="flex gap-4">
+                                        {state.currentCard.type === 'MARKET' ? (
+                                            <>
+                                                <button
+                                                    onClick={() => socket.emit('buy_asset', { roomId })}
+                                                    className="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-xl text-xl shadow-lg"
+                                                >
+                                                    КУПИТЬ
+                                                </button>
+                                                <button
+                                                    onClick={handleEndTurn}
+                                                    className="flex-1 bg-slate-600 hover:bg-slate-500 text-white font-bold py-4 rounded-xl text-xl shadow-lg"
+                                                >
+                                                    ОТКАЗАТЬСЯ
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <button
+                                                onClick={handleEndTurn}
+                                                className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-4 px-8 rounded-xl text-xl shadow-lg transition-transform active:scale-95"
+                                            >
+                                                OK, ПОНЯТНО
+                                            </button>
+                                        )}
+                                    </div>
                                 ) : (
                                     <div className="text-slate-500 animate-pulse">Ожидание решения игрока...</div>
                                 )}
