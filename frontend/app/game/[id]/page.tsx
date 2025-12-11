@@ -123,8 +123,8 @@ export default function GameRoom() {
                                     <div
                                         key={player.id}
                                         className={`group flex items-center gap-4 p-4 rounded-2xl transition-all border ${player.id === socket.id
-                                                ? 'bg-blue-600/10 border-blue-500/30 shadow-[0_0_20px_rgba(37,99,235,0.1)]'
-                                                : 'bg-white/5 border-white/5 hover:bg-white/10'
+                                            ? 'bg-blue-600/10 border-blue-500/30 shadow-[0_0_20px_rgba(37,99,235,0.1)]'
+                                            : 'bg-white/5 border-white/5 hover:bg-white/10'
                                             }`}
                                     >
                                         <div className="relative">
@@ -265,4 +265,4 @@ export default function GameRoom() {
         </div>
     );
 }
-```
+
