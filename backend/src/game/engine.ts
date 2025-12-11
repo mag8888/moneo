@@ -19,9 +19,13 @@ export interface PlayerState extends Player {
     expenses: number;
     assets: any[];
     liabilities: any[];
+    loanDebt: number; // Total bank loans
     position: number; // Square index (0-23 for Rat Race)
     isFastTrack: boolean;
-    hasChild: boolean;
+    childrenCount: number;
+    childCost: number; // Expense per child
+    salary: number;
+    passiveIncome: number;
 }
 
 export interface BoardSquare {
@@ -62,22 +66,50 @@ export class GameEngine {
         // TODO: Load profession stats
         return {
             ...p,
-            cash: 3000, // Mock init
-            cashflow: 1000,
-            income: 3000,
-            expenses: 2000,
+            cash: 3000,
             assets: [],
             liabilities: [],
+            loanDebt: 0,
             position: 0,
             isFastTrack: false,
-            hasChild: false
+            childrenCount: 0,
+            childCost: 240,
+            salary: 3000,
+            passiveIncome: 0,
+            income: 3000,
+            expenses: 2000,
+            cashflow: 1000
         };
+    }
+
+    private checkFastTrackCondition(player: PlayerState) {
+        // "passive income covers expenses * 2 AND loans usually 0"
+        // We need a way to track Loan Amount. Currently we just have repayLoan logic.
+        // Let's assume player.liabilities has 'Bank Loan'.
+
+        // For now, simplify: if passiveIncome >= expenses * 2.
+        // And we need to ensure loans are paid. I'll add a 'hasLoans' check if I can track it.
+        // Let's add loan tracking to Player first properly if needed, but for now logic is:
+
+        if (player.passiveIncome >= player.expenses * 2 && player.loanDebt === 0) {
+            // Check if loans exist
+            // Implementation detail: need to store loan liability specificially
+
+            // Transition
+            player.isFastTrack = true;
+            player.position = 0; // Reset to start of Outer Track
+            player.cash += 100000; // Bonus for exiting?
+            this.state.log.push(`🚀 ${player.name} ENTERED FAST TRACK!`);
+        }
     }
 
     rollDice(): number {
         const roll1 = Math.floor(Math.random() * 6) + 1;
-        // const roll2 = Math.floor(Math.random() * 6) + 1; // 1 or 2 dice logic? Usually 1 in Rat Race
+        // const roll2 = Math.floor(Math.random() * 6) + 1; 
         const total = roll1;
+
+        // Phase check? 
+        if (this.state.phase !== 'ROLL') return 0; // Prevent double roll
 
         this.movePlayer(total);
         return total;
@@ -85,23 +117,60 @@ export class GameEngine {
 
     movePlayer(steps: number) {
         const player = this.state.players[this.state.currentPlayerIndex];
-        const oldPos = player.position;
-        player.position = (player.position + steps) % this.state.board.length;
 
-        // Passed Payday? logic
-        if (player.position < oldPos && !player.isFastTrack) {
-            player.cash += player.cashflow;
-            this.state.log.push(`${player.name} passed Payday! +$${player.cashflow}`);
+        if (player.isFastTrack) {
+            const trackLength = 48; // Fast Track length
+            let newPos = player.position + steps;
+
+            // Fast Track Payday Logic
+            if (newPos >= trackLength) {
+                newPos = newPos % trackLength;
+                player.cash += player.cashflow; // Or specific Fast Track Amount?
+                this.state.log.push(`${player.name} passed Fast Track Payday! +$${player.cashflow}`);
+            }
+            player.position = newPos;
+
+            // Handle Squares (Mock for now, using modulo to simulate types)
+            this.handleFastTrackSquare(player, newPos);
+
+        } else {
+            // Rat Race Logic
+            const oldPos = player.position;
+            let newPos = player.position + steps;
+
+            if (newPos >= 24) {
+                newPos = newPos % 24;
+                // Payday
+                player.cash += player.cashflow;
+                this.state.log.push(`${player.name} passed Payday! +$${player.cashflow}`);
+            }
+            player.position = newPos;
+            const square = this.getSquare(newPos);
+            this.state.log.push(`${player.name} moved to ${square.name}`);
+            this.handleSquare(player, square);
         }
-
         this.state.phase = 'ACTION';
-        this.handleSquare(player.position);
     }
 
-    handleSquare(pos: number) {
-        const square = this.state.board[pos];
-        const player = this.state.players[this.state.currentPlayerIndex];
+    private getSquare(pos: number): BoardSquare {
+        return this.state.board[pos];
+    }
 
+    handleFastTrackSquare(player: PlayerState, position: number) {
+        // Mock Fast Track Squares
+        const type = position % 2 === 0 ? 'BUSINESS' : 'DREAM';
+        this.state.log.push(`${player.name} landed on Fast Track ${type} (Pos: ${position})`);
+
+        if (type === 'BUSINESS') {
+            // Mock Business Opportunity
+            const cost = 50000;
+            const flow = 2000;
+            // Auto-buy for now or prompt
+            this.state.log.push(`Business Opp: Cost $${cost}, Flow +$${flow}`);
+        }
+    }
+
+    handleSquare(player: PlayerState, square: BoardSquare) {
         this.state.log.push(`${player.name} landed on ${square.type}`);
 
         if (square.type === 'MARKET') {
@@ -119,32 +188,62 @@ export class GameEngine {
         } else if (square.type === 'DEAL') {
             // Ask User Small/Big
             // Assume Small for now or set flag
+        } else if (square.type === 'BABY') {
+            if (player.childrenCount >= 3) {
+                this.state.log.push(`${player.name} already has max children.`);
+            } else {
+                // Roll for baby: 1-4 = Born, 5-6 = Not
+                const roll = Math.floor(Math.random() * 6) + 1;
+                if (roll <= 4) {
+                    player.childrenCount++;
+                    player.expenses += player.childCost;
+                    player.cashflow = player.income - player.expenses;
+                    // "3 разово выплачивается 5000$" - Assuming generic "Gift" based on Congratulations or Cost?
+                    // Usually Baby is a Cost. But prompt says "Payout and Congrats". 
+                    // Let's Give $5000 as a "Gift" for now based on "Congratulations".
+                    player.cash += 5000;
+
+                    this.state.log.push(`👶 Baby Born! (Roll: ${roll}). +$5000 Gift. Expenses +$${player.childCost}/mo`);
+                } else {
+                    this.state.log.push(`No Baby (Roll: ${roll}).`);
+                }
+            }
         }
     }
 
-    takeLoan(amount: number) {
-        if (amount % 1000 !== 0) throw new Error("Loan must be multiple of 1000");
-        const player = this.state.players[this.state.currentPlayerIndex];
-        // TODO: Check max loan limit based on cashflow
+    takeLoan(playerId: string, amount: number) {
+        const player = this.state.players.find(p => p.id === playerId);
+        if (!player) return;
+
+        // Interest 10%
+        const interest = amount * 0.1;
+
         player.cash += amount;
-        player.liabilities.push({ name: 'Bank Loan', value: amount, cost: amount * 0.1 });
-        player.expenses += amount * 0.1;
+        player.loanDebt += amount;
+        player.expenses += interest;
         player.cashflow = player.income - player.expenses;
-        this.state.log.push(`${player.name} took a loan of $${amount}`);
+
+        this.state.log.push(`${player.name} took loan $${amount}. Expenses +$${interest}/mo`);
     }
 
-    repayLoan(amount: number) {
-        if (amount % 1000 !== 0) throw new Error("Repayment must be multiple of 1000");
-        const player = this.state.players[this.state.currentPlayerIndex];
-        if (player.cash < amount) throw new Error("Not enough cash");
+    repayLoan(playerId: string, amount: number) {
+        const player = this.state.players.find(p => p.id === playerId);
+        if (!player) return;
 
-        // Simply reduce generic loan liability relative to amount
-        // For prototype, just finding a loan and reducing it or reducing general pool?
-        // Simplified: Assume there is a 'Bank Loan' liability aggregation or just reduce stats
+        if (player.loanDebt < amount) return; // Cannot overpay
+        if (player.cash < amount) return;
+
+        const interest = amount * 0.1;
+
         player.cash -= amount;
-        player.expenses -= amount * 0.1;
+        player.loanDebt -= amount;
+        player.expenses -= interest;
         player.cashflow = player.income - player.expenses;
-        this.state.log.push(`${player.name} repaid loan of $${amount}`);
+
+        this.state.log.push(`${player.name} repaid loan $${amount}. Expenses -$${interest}/mo`);
+
+        // Check Fast Track after repaying loan (might free up cashflow condition)
+        this.checkFastTrackCondition(player);
     }
 
     endTurn() {

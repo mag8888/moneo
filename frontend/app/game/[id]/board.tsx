@@ -128,6 +128,10 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                             <span>Денежный поток:</span>
                             <span className="text-blue-400 font-mono">+${currentPlayer.cashflow}</span>
                         </div>
+                        <div className="flex justify-between mt-2 text-xs text-slate-400">
+                            <span>Дети: {currentPlayer.childrenCount}/3</span>
+                            <span>(Расход: -${currentPlayer.childrenCount * currentPlayer.childCost})</span>
+                        </div>
                     </div>
                 </div>
 
