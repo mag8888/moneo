@@ -158,8 +158,8 @@ export class GameEngine {
             }
             player.position = startOffset + newRelative;
 
-            // Handle Squares (Mock for now, using modulo to simulate types)
-            this.handleFastTrackSquare(player, newPos);
+            // Handle Squares
+            this.handleFastTrackSquare(player, player.position);
 
         } else {
             // Rat Race Logic
