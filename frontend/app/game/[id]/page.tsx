@@ -198,14 +198,19 @@ export default function GameRoom() {
                                             return (
                                                 <button
                                                     key={t}
-                                                    disabled={isTaken}
-                                                    onClick={() => !isReady && setToken(t)}
+                                                    disabled={isTaken || isReady}
+                                                    onClick={() => {
+                                                        if (!isReady) {
+                                                            setToken(t);
+                                                            socket.emit('player_ready', { roomId, isReady, dream, token: t });
+                                                        }
+                                                    }}
                                                     className={`
                                                         aspect-square rounded-2xl flex items-center justify-center text-4xl relative transition-all duration-300
                                                         ${isSelected
                                                             ? 'bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border-indigo-400 ring-2 ring-indigo-500/50 shadow-[0_0_30px_rgba(99,102,241,0.3)] scale-110'
                                                             : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20 hover:scale-105 border'}
-                                                        ${isTaken ? 'opacity-20 grayscale cursor-not-allowed scale-90' : 'cursor-pointer'}
+                                                        ${(isTaken || isReady) ? 'opacity-50 grayscale cursor-not-allowed scale-90' : 'cursor-pointer'}
                                                     `}
                                                 >
                                                     <span className={`drop-shadow-lg ${isSelected ? 'animate-bounce-subtle' : ''}`}>{t}</span>
@@ -234,7 +239,11 @@ export default function GameRoom() {
                                     <div className="relative">
                                         <select
                                             value={dream}
-                                            onChange={(e) => setDream(e.target.value)}
+                                            onChange={(e) => {
+                                                const newDream = e.target.value;
+                                                setDream(newDream);
+                                                socket.emit('player_ready', { roomId, isReady, dream: newDream, token });
+                                            }}
                                             className="w-full bg-black/20 border border-white/10 rounded-2xl px-6 py-4 appearance-none outline-none focus:border-blue-500/50 focus:bg-black/40 transition-all text-lg font-medium text-slate-200 shadow-inner"
                                             disabled={isReady}
                                         >
