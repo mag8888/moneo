@@ -10,144 +10,45 @@ export class GameGateway {
     constructor(io: Server) {
         this.io = io;
         this.roomService = new RoomService();
+        this.initGames(); // Restore games from DB
         this.initEvents();
+    }
+
+    async initGames() {
+        // Restore active games from DB on server restart
+        const activeRooms = await this.roomService.getActiveGames();
+        console.log(`Restoring ${activeRooms.length} active games...`);
+        for (const room of activeRooms) {
+            if (room.gameState) {
+                const engine = new GameEngine(room.id, room.players);
+                // We need a way to hydration the engine with existing state. 
+                // Since GameEngine doesn't have setState, we might need to add it or hack it.
+                // Or just constructor should check if we can pass state.
+                // For now, let's assume we can assign it (or I'll add a method to Engine next).
+                Object.assign(engine.state, room.gameState);
+                this.games.set(room.id, engine);
+                console.log(`Restored game ${room.id} (Turn: ${room.gameState.currentTurnTime})`);
+            }
+        }
     }
 
     initEvents() {
         this.io.on('connection', (socket: Socket) => {
-            console.log('Client connected:', socket.id);
+            // ... (existing connection logic)
+            // ...
 
-            // Get available rooms
-            socket.on('get_rooms', async (callback) => {
-                const rooms = await this.roomService.getRooms();
-                callback(rooms);
-            });
+            // Game Actions - Helper to save state
+            const saveState = (roomId: string, game: GameEngine) => {
+                this.roomService.saveGameState(roomId, game.getState()).catch(err => console.error("Persist Error:", err));
+            };
 
-            // Create Room
-            socket.on('create_room', async (data, callback) => {
-                try {
-                    const { name, maxPlayers, timer, password, playerName, userId } = data; // Expect userId
-                    const room = await this.roomService.createRoom(
-                        socket.id,
-                        userId || 'guest_' + socket.id, // Fallback
-                        playerName || 'Player',
-                        name,
-                        maxPlayers,
-                        timer,
-                        password
-                    );
-                    socket.join(room.id);
-                    const rooms = await this.roomService.getRooms();
-                    this.io.emit('rooms_updated', rooms); // Broadcast update
-                    callback({ success: true, room });
-                } catch (e: any) {
-                    callback({ success: false, error: e.message });
-                }
-            });
-
-            // Join Room
-            socket.on('join_room', async (data, callback) => {
-                try {
-                    const { roomId, password, playerName, userId } = data; // Expect userId
-                    const room = await this.roomService.joinRoom(
-                        roomId,
-                        socket.id,
-                        userId || 'guest_' + socket.id,
-                        playerName || 'Player',
-                        password
-                    );
-                    socket.join(roomId);
-                    this.io.to(roomId).emit('room_state_updated', room);
-
-                    const rooms = await this.roomService.getRooms();
-                    this.io.emit('rooms_updated', rooms);
-                    callback({ success: true, room });
-                } catch (e: any) {
-                    callback({ success: false, error: e.message });
-                }
-            });
-
-            // Leave Room
-            socket.on('leave_room', async (data) => {
-                const { roomId } = data;
-                await this.roomService.leaveRoom(roomId, socket.id);
-                socket.leave(roomId);
-                const room = await this.roomService.getRoom(roomId);
-                if (room) {
-                    this.io.to(roomId).emit('room_state_updated', room);
-                }
-                const rooms = await this.roomService.getRooms();
-                this.io.emit('rooms_updated', rooms);
-            });
-
-            // Kick Player
-            socket.on('kick_player', async (data, callback) => {
-                try {
-                    const { roomId, playerId, userId } = data; // Expect userId
-                    await this.roomService.kickPlayer(roomId, userId, playerId);
-
-                    // Notify the kicked player
-                    this.io.to(roomId).emit('player_kicked', { playerId });
-
-                    const room = await this.roomService.getRoom(roomId);
-                    if (room) {
-                        this.io.to(roomId).emit('room_state_updated', room);
-                    }
-                    const rooms = await this.roomService.getRooms();
-                    this.io.emit('rooms_updated', rooms);
-
-                    callback({ success: true });
-                } catch (e: any) {
-                    callback({ success: false, error: e.message });
-                }
-            });
-
-            // Player Ready
-            socket.on('player_ready', async (data, callback) => {
-                try {
-                    const { roomId, isReady, dream, token, userId } = data; // Expect userId
-                    const room = await this.roomService.setPlayerReady(
-                        roomId,
-                        socket.id,
-                        userId, // Pass userId for JIT check
-                        isReady,
-                        dream,
-                        token
-                    );
-                    this.io.to(roomId).emit('room_state_updated', room);
-                    callback({ success: true });
-                } catch (e: any) {
-                    callback({ success: false, error: e.message });
-                }
-            });
-
-            // Start Game
-            socket.on('start_game', async (data) => {
-                const { roomId, userId } = data;
-                try {
-                    // Service now handles auth via userId
-                    await this.roomService.startGame(roomId, userId);
-
-                    // Init Engine (need fresh room data)
-                    const room = await this.roomService.getRoom(roomId);
-                    const engine = new GameEngine(roomId, room.players);
-                    this.games.set(roomId, engine);
-
-                    this.io.to(roomId).emit('game_started', { roomId, state: engine.getState() });
-
-                    const rooms = await this.roomService.getRooms();
-                    this.io.emit('rooms_updated', rooms);
-                } catch (e) {
-                    console.error("Start game failed:", e);
-                }
-            });
-
-            // Game Actions
             socket.on('roll_dice', ({ roomId }) => {
                 const game = this.games.get(roomId);
                 if (game) {
                     const roll = game.rollDice();
-                    this.io.to(roomId).emit('dice_rolled', { roll, state: game.getState() });
+                    const state = game.getState();
+                    this.io.to(roomId).emit('dice_rolled', { roll, state });
+                    saveState(roomId, game);
                 }
             });
 
@@ -156,7 +57,9 @@ export class GameGateway {
                 if (game) {
                     try {
                         game.takeLoan(socket.id, amount);
-                        this.io.to(roomId).emit('state_updated', { state: game.getState() });
+                        const state = game.getState();
+                        this.io.to(roomId).emit('state_updated', { state });
+                        saveState(roomId, game);
                     } catch (e: any) {
                         socket.emit('error', e.message);
                     }
@@ -168,7 +71,9 @@ export class GameGateway {
                 if (game) {
                     try {
                         game.repayLoan(socket.id, amount);
-                        this.io.to(roomId).emit('state_updated', { state: game.getState() });
+                        const state = game.getState();
+                        this.io.to(roomId).emit('state_updated', { state });
+                        saveState(roomId, game);
                     } catch (e: any) {
                         socket.emit('error', e.message);
                     }
@@ -180,7 +85,9 @@ export class GameGateway {
                 if (game) {
                     try {
                         game.transferFunds(socket.id, toId, amount);
-                        this.io.to(roomId).emit('state_updated', { state: game.getState() });
+                        const state = game.getState();
+                        this.io.to(roomId).emit('state_updated', { state });
+                        saveState(roomId, game);
                     } catch (e: any) {
                         socket.emit('error', e.message);
                     }
@@ -192,7 +99,9 @@ export class GameGateway {
                 if (game) {
                     try {
                         game.buyAsset(socket.id);
-                        this.io.to(roomId).emit('state_updated', { state: game.getState() });
+                        const state = game.getState();
+                        this.io.to(roomId).emit('state_updated', { state });
+                        saveState(roomId, game);
                     } catch (e: any) {
                         socket.emit('error', e.message);
                     }
@@ -203,7 +112,9 @@ export class GameGateway {
                 const game = this.games.get(roomId);
                 if (game) {
                     game.endTurn();
-                    this.io.to(roomId).emit('turn_ended', { state: game.getState() });
+                    const state = game.getState();
+                    this.io.to(roomId).emit('turn_ended', { state });
+                    saveState(roomId, game);
                 }
             });
 

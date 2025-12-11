@@ -97,6 +97,11 @@ export class RoomService {
         return rooms.map(r => this.sanitizeRoom(r));
     }
 
+    async getActiveGames(): Promise<any[]> {
+        const rooms = await RoomModel.find({ status: 'playing' });
+        return rooms.map(r => this.sanitizeRoom(r));
+    }
+
     async getRoom(roomId: string): Promise<any> {
         const room = await RoomModel.findById(roomId);
         return room ? this.sanitizeRoom(room) : null;
