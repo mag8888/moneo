@@ -51,7 +51,12 @@ export class RoomService {
         if (room.status !== 'waiting') throw new Error("Game already started");
         if (room.players.length >= room.maxPlayers) throw new Error("Room is full");
         if (room.password && room.password !== password) throw new Error("Invalid password");
-        if (room.players.find(p => p.id === playerId)) throw new Error("Already in room");
+
+        // Idempotency: If already in room, just return (handle rejoin)
+        const existingPlayer = room.players.find(p => p.id === playerId);
+        if (existingPlayer) {
+            return room;
+        }
 
         room.players.push({
             id: playerId,

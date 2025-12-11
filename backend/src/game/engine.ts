@@ -217,9 +217,6 @@ export class GameEngine {
             player.cash -= (card.cost || 0);
             this.state.log.push(`Paid $${card.cost} for ${card.title}`);
             // TODO: Check bankruptcy / Credit needed
-        } else if (square.type === 'DEAL') {
-            // Ask User Small/Big
-            // Assume Small for now or set flag
         } else if (square.type === 'BABY') {
             if (player.childrenCount >= 3) {
                 this.state.log.push(`${player.name} already has max children.`);
