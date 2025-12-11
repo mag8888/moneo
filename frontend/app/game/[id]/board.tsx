@@ -202,18 +202,6 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                     currentPlayerId={currentPlayer.id}
                 />
 
-                {/* Center Action Button (if not blocked by card) */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    {!state.currentCard && isMyTurn && state.phase === 'ROLL' && (
-                        <button
-                            onClick={handleRoll}
-                            className="pointer-events-auto bg-green-600 hover:bg-green-500 text-white font-bold py-4 px-12 rounded-full text-xl shadow-[0_0_50px_rgba(22,163,74,0.4)] transform transition hover:scale-105 active:scale-95"
-                        >
-                            Бросить 🎲
-                        </button>
-                    )}
-                </div>
-
                 {state.currentCard && (
                     <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
                         <div className="bg-[#1e293b] p-8 rounded-3xl border border-slate-700 shadow-2xl max-w-md w-full text-center relative overflow-hidden">

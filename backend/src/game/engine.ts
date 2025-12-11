@@ -38,6 +38,7 @@ export interface BoardSquare {
 }
 
 // Mock Board Configuration (Rat Race - 24 Squares)
+// Mock Board Configuration (Rat Race - 24 Squares)
 export const RAT_RACE_SQUARES: BoardSquare[] = Array.from({ length: 24 }, (_, i) => {
     let type: BoardSquare['type'] = 'DEAL'; // Default
     if (i % 6 === 0) type = 'PAYDAY';
@@ -48,6 +49,19 @@ export const RAT_RACE_SQUARES: BoardSquare[] = Array.from({ length: 24 }, (_, i)
     else if (i === 4) type = 'CHARITY';
     return { index: i, type, name: type };
 });
+
+// Mock Fast Track Configuration (48 Squares)
+export const FAST_TRACK_SQUARES: BoardSquare[] = Array.from({ length: 48 }, (_, i) => {
+    const ftIndex = i + 24; // Start from index 24
+    let type: BoardSquare['type'] = i % 2 === 0 ? 'DEAL' : 'DREAM'; // Placeholder types
+    // Add specific Fast Track types distinct from Rat Race if needed
+    // For now reusing types but names can differ
+    if (i % 8 === 0) type = 'PAYDAY'; // Cashflow Day
+
+    return { index: ftIndex, type, name: `FT ${i}` };
+});
+
+export const FULL_BOARD = [...RAT_RACE_SQUARES, ...FAST_TRACK_SQUARES];
 
 export class GameEngine {
     state: GameState;
@@ -61,7 +75,7 @@ export class GameEngine {
             currentPlayerIndex: 0,
             currentTurnTime: 120,
             phase: 'ROLL',
-            board: RAT_RACE_SQUARES,
+            board: FULL_BOARD,
             log: ['Game Started']
         };
     }
