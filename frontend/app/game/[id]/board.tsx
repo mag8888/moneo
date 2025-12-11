@@ -207,6 +207,21 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                     )}
                 </div>
 
+                {/* Winner Overlay */}
+                {state.winner && (
+                    <div className="absolute inset-0 z-50 bg-black/90 flex flex-col items-center justify-center animate-in fade-in duration-1000">
+                        <div className="text-6xl mb-4">🏆</div>
+                        <h2 className="text-5xl font-bold text-yellow-400 mb-4 tracking-tighter">WINNER!</h2>
+                        <div className="text-2xl text-white mb-8">{state.winner} has escaped the Rat Race!</div>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="bg-green-600 hover:bg-green-500 text-white font-bold py-4 px-12 rounded-full text-xl shadow-[0_0_30px_rgba(22,163,74,0.6)]"
+                        >
+                            Play Again
+                        </button>
+                    </div>
+                )}
+
                 {/* Sidebar (HUD) */}
                 <div className="w-96 bg-slate-800 border-l border-slate-700 flex flex-col shadow-2xl z-20">
                     <div className="p-6 border-b border-slate-700">

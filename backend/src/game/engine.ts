@@ -5,11 +5,12 @@ export interface GameState {
     roomId: string;
     players: PlayerState[];
     currentPlayerIndex: number;
-    currentTurnTime: number; // Seconds left
-    phase: 'ROLL' | 'MOVE' | 'ACTION' | 'END';
+    currentTurnTime: number;
+    phase: 'ROLL' | 'ACTION' | 'END';
     board: BoardSquare[];
+    currentCard?: Card;
     log: string[];
-    currentCard?: Card; // Active card on screen
+    winner?: string;
 }
 
 export interface PlayerState extends Player {
@@ -200,11 +201,16 @@ export class GameEngine {
     handleSquare(player: PlayerState, square: BoardSquare) {
         this.state.log.push(`${player.name} landed on ${square.type}`);
 
-        if (square.type === 'MARKET') {
+        if (square.type === 'PAYDAY') {
+            this.state.log.push(`Entered Payday! (Cashflow added on pass)`);
+        } else if (square.type === 'MARKET' || square.type === 'DEAL') {
+            // Both MARKET and DEAL trigger Opportunity Cards for this MVP
+            // In full game: DEAL = Buy, MARKET = Sell.
+            // Here we just use our 'Market Deck' which contains Buy opportunities.
             const card = this.cardManager.drawMarket();
             this.state.currentCard = card;
             this.state.log.push(`Opportunity: ${card.title}`);
-            // Wait for user action (buy_asset or end_turn/pass)
+            // Wait for user action
         } else if (square.type === 'EXPENSE') {
             const card = this.cardManager.drawExpense();
             this.state.currentCard = card;
