@@ -40,7 +40,7 @@ export const BoardVisualizer = ({ board, players, animatingPos, currentPlayerId 
             if (ftIndex <= 36) return { r: 1, c: 1 + (ftIndex - 24) };
 
             // Right: 11 squares (37-47) -> (2, 13) to (12, 13)
-            return { r: 1 + (ftIndex - 37), c: 13 };
+            return { r: 2 + (ftIndex - 37), c: 13 };
         }
     };
 

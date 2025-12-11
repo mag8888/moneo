@@ -117,10 +117,36 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
         });
     }, [state.players, animatingPos]);
 
+    // Mobile Tabs State
+    const [activeTab, setActiveTab] = useState<'board' | 'stats' | 'actions'>('board');
+
     return (
-        <div className="h-screen bg-[#0f172a] text-white overflow-hidden font-sans grid grid-cols-[340px_1fr_300px]">
+        <div className="h-screen bg-[#0f172a] text-white font-sans flex flex-col lg:grid lg:grid-cols-[340px_1fr_300px] overflow-hidden">
+
+            {/* MOBILE TABS HEADER */}
+            <div className="lg:hidden flex bg-[#0B0E14] border-b border-slate-800 p-2 gap-2 z-50">
+                <button
+                    onClick={() => setActiveTab('stats')}
+                    className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${activeTab === 'stats' ? 'bg-slate-800 text-white border border-slate-700' : 'text-slate-500'}`}
+                >
+                    Stats
+                </button>
+                <button
+                    onClick={() => setActiveTab('board')}
+                    className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${activeTab === 'board' ? 'bg-slate-800 text-white border border-slate-700' : 'text-slate-500'}`}
+                >
+                    Board
+                </button>
+                <button
+                    onClick={() => setActiveTab('actions')}
+                    className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${activeTab === 'actions' ? 'bg-slate-800 text-white border border-slate-700' : 'text-slate-500'}`}
+                >
+                    Actions
+                </button>
+            </div>
+
             {/* LEFT SIDEBAR: Stats & Bank */}
-            <div className="flex flex-col gap-4 p-4 border-r border-slate-800 bg-[#0B0E14] overflow-y-auto custom-scrollbar">
+            <div className={`${activeTab === 'stats' ? 'flex' : 'hidden'} lg:flex flex-col gap-4 p-4 border-r border-slate-800 bg-[#0B0E14] overflow-y-auto custom-scrollbar h-full lg:h-auto`}>
 
                 {/* Bank Card */}
                 <div className="bg-[#151b2b] rounded-2xl p-4 border border-slate-800 shadow-lg">
@@ -194,7 +220,7 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
             </div>
 
             {/* CENTER: Board */}
-            <div className="relative bg-[#0f172a] flex items-center justify-center p-4">
+            <div className={`${activeTab === 'board' ? 'flex' : 'hidden'} lg:flex relative bg-[#0f172a] items-center justify-center p-4 flex-1 overflow-hidden`}>
                 <BoardVisualizer
                     board={state.board}
                     players={state.players}
@@ -247,7 +273,7 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
             </div>
 
             {/* RIGHT SIDEBAR: Actions & Players */}
-            <div className="flex flex-col gap-4 p-4 border-l border-slate-800 bg-[#0B0E14] overflow-y-auto custom-scrollbar">
+            <div className={`${activeTab === 'actions' ? 'flex' : 'hidden'} lg:flex flex-col gap-4 p-4 border-l border-slate-800 bg-[#0B0E14] overflow-y-auto custom-scrollbar h-full lg:h-auto`}>
 
                 {/* Actions Panel */}
                 <div className="bg-[#151b2b] rounded-2xl p-4 border border-slate-800 shadow-lg">
