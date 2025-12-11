@@ -16,5 +16,7 @@ const SOCKET_URL = getSocketUrl();
 
 export const socket = io(SOCKET_URL, {
     autoConnect: true,
-    transports: ["websocket"],
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000,
 });
