@@ -18,17 +18,12 @@ export default function Lobby() {
     const [rooms, setRooms] = useState<Room[]>([]);
     const [isCreating, setIsCreating] = useState(false);
     const [newRoomName, setNewRoomName] = useState('');
+    const [maxPlayers, setMaxPlayers] = useState(4);
 
     useEffect(() => {
         socket.emit('get_rooms', (data: Room[]) => setRooms(data));
-
-        socket.on('rooms_updated', (data: Room[]) => {
-            setRooms(data);
-        });
-
-        return () => {
-            socket.off('rooms_updated');
-        };
+        socket.on('rooms_updated', (data: Room[]) => setRooms(data));
+        return () => { socket.off('rooms_updated'); };
     }, []);
 
     const createRoom = () => {
@@ -38,7 +33,7 @@ export default function Lobby() {
         const playerName = user.firstName || user.username || 'Guest';
         const userId = user._id || user.id || 'guest-' + Math.random();
 
-        socket.emit('create_room', { name: newRoomName, maxPlayers: 4, timer: 120, playerName, userId }, (response: any) => {
+        socket.emit('create_room', { name: newRoomName, maxPlayers, timer: 120, playerName, userId }, (response: any) => {
             if (response.success) {
                 router.push(`/game/${response.room.id}`);
             } else {
@@ -69,17 +64,30 @@ export default function Lobby() {
                 {isCreating && (
                     <div className="bg-slate-800 p-6 rounded-xl mb-8 border border-slate-700">
                         <h2 className="text-xl mb-4">Новая комната</h2>
-                        <div className="flex gap-4">
+                        <div className="flex flex-col gap-4">
                             <input
                                 type="text"
                                 placeholder="Название комнаты"
                                 value={newRoomName}
                                 onChange={(e) => setNewRoomName(e.target.value)}
-                                className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
                             />
+
+                            <div className="flex items-center gap-4">
+                                <label className="text-slate-400 text-sm w-32">Участников: <span className="text-white font-bold">{maxPlayers}</span></label>
+                                <input
+                                    type="range"
+                                    min="2"
+                                    max="8"
+                                    value={maxPlayers}
+                                    onChange={(e) => setMaxPlayers(parseInt(e.target.value))}
+                                    className="flex-1 accent-blue-500"
+                                />
+                            </div>
+
                             <button
                                 onClick={createRoom}
-                                className="bg-green-600 hover:bg-green-700 px-6 py-2 rounded-lg"
+                                className="bg-green-600 hover:bg-green-700 px-6 py-2 rounded-lg w-full sm:w-auto self-end"
                             >
                                 Создать
                             </button>

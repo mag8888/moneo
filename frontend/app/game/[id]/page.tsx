@@ -19,6 +19,7 @@ interface Room {
     players: Player[];
     status: string;
     creatorId: string;
+    maxPlayers?: number;
 }
 
 export default function GameRoom() {
@@ -164,7 +165,7 @@ export default function GameRoom() {
                             <h2 className="text-sm uppercase tracking-widest text-slate-400 font-bold mb-6 flex items-center gap-2">
                                 <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
                                 Игроки в комнате
-                                <span className="ml-auto bg-white/10 px-2 py-0.5 rounded text-xs text-white">{room.players.length}/4</span>
+                                <span className="ml-auto bg-white/10 px-2 py-0.5 rounded text-xs text-white">{room.players.length}/{room.maxPlayers || 4}</span>
                             </h2>
                             <div className="space-y-3">
                                 {room.players.map(player => (
@@ -207,7 +208,7 @@ export default function GameRoom() {
                                         )}
                                     </div>
                                 ))}
-                                {Array.from({ length: Math.max(0, 4 - room.players.length) }).map((_, i) => (
+                                {Array.from({ length: Math.max(0, (room.maxPlayers || 4) - room.players.length) }).map((_, i) => (
                                     <div key={`empty-${i}`} className="p-4 rounded-2xl border border-white/5 border-dashed bg-transparent flex items-center justify-center text-slate-600 text-sm italic">
                                         Ожидание игрока...
                                     </div>
@@ -219,7 +220,7 @@ export default function GameRoom() {
                         {room.creatorId === socket.id && (
                             <button
                                 onClick={startGame}
-                                disabled={!room.players.every(p => p.isReady) || room.players.length < 1}
+                                disabled={room.players.length < 2 || !room.players.every(p => p.isReady)}
                                 className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 py-6 rounded-3xl font-black text-xl shadow-[0_0_40px_rgba(79,70,229,0.3)] transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:grayscale disabled:shadow-none border border-white/10 relative overflow-hidden group"
                             >
                                 <div className="absolute inset-0 bg-white/20 translate-y-[100%] group-hover:translate-y-0 transition-transform duration-500 blur-md"></div>
