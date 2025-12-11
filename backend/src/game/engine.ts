@@ -23,9 +23,10 @@ export interface PlayerState extends Player {
     position: number; // Square index (0-23 for Rat Race)
     isFastTrack: boolean;
     childrenCount: number;
-    childCost: number; // Expense per child
+    childCost: number;
     salary: number;
     passiveIncome: number;
+    skippedTurns: number;
 }
 
 export interface BoardSquare {
@@ -41,7 +42,8 @@ export const RAT_RACE_SQUARES: BoardSquare[] = Array.from({ length: 24 }, (_, i)
     else if ([2, 10, 18].includes(i)) type = 'EXPENSE';
     else if ([7, 15, 23].includes(i)) type = 'MARKET';
     else if (i === 12) type = 'BABY';
-    // Add more types...
+    else if (i === 20) type = 'OOW'; // Downsized
+    else if (i === 4) type = 'CHARITY';
     return { index: i, type, name: type };
 });
 
@@ -78,7 +80,8 @@ export class GameEngine {
             passiveIncome: 0,
             income: 3000,
             expenses: 2000,
-            cashflow: 1000
+            cashflow: 1000,
+            skippedTurns: 0
         };
     }
 
@@ -104,6 +107,15 @@ export class GameEngine {
     }
 
     rollDice(): number {
+        const player = this.state.players[this.state.currentPlayerIndex];
+
+        if (player.skippedTurns > 0) {
+            player.skippedTurns--;
+            this.state.log.push(`${player.name} skips turn (Remaining: ${player.skippedTurns})`);
+            this.endTurn();
+            return 0;
+        }
+
         const roll1 = Math.floor(Math.random() * 6) + 1;
         // const roll2 = Math.floor(Math.random() * 6) + 1; 
         const total = roll1;
@@ -161,12 +173,27 @@ export class GameEngine {
         const type = position % 2 === 0 ? 'BUSINESS' : 'DREAM';
         this.state.log.push(`${player.name} landed on Fast Track ${type} (Pos: ${position})`);
 
+        // Win Condition: Cashflow > 50k added on Fast Track
+        // For simplicity: specific "Win" check
+        if (player.cashflow >= 50000) {
+            this.state.winner = player.name;
+            this.state.phase = 'END';
+            this.state.log.push(`🏆 ${player.name} WINS THE GAME!`);
+            return;
+        }
+
         if (type === 'BUSINESS') {
             // Mock Business Opportunity
             const cost = 50000;
             const flow = 2000;
-            // Auto-buy for now or prompt
-            this.state.log.push(`Business Opp: Cost $${cost}, Flow +$${flow}`);
+            // Auto-buy example
+            if (player.cash >= cost) {
+                player.cash -= cost;
+                player.cashflow += flow;
+                player.income += flow;
+                player.passiveIncome += flow;
+                this.state.log.push(`Bought Business! Flow +$${flow}`);
+            }
         }
     }
 
@@ -207,6 +234,13 @@ export class GameEngine {
                     this.state.log.push(`No Baby (Roll: ${roll}).`);
                 }
             }
+        } else if (square.type === 'OOW') {
+            const expenses = player.expenses;
+            player.cash -= expenses; // Pay full expenses
+            player.skippedTurns = 2; // Lose 2 turns
+            this.state.log.push(`🚫 DOWNSIZED! Paid -$${expenses} and skip 2 turns.`);
+        } else if (square.type === 'CHARITY') {
+            this.state.log.push(`Charity opportunity (Not Impl).`);
         }
     }
 
