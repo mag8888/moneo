@@ -32,21 +32,33 @@ export interface PlayerState extends IPlayer {
 
 export interface BoardSquare {
     index: number;
-    type: 'DEAL' | 'MARKET' | 'EXPENSE' | 'PAYDAY' | 'BABY' | 'CHARITY' | 'OOW' | 'DREAM';
+    type: 'DEAL' | 'MARKET' | 'EXPENSE' | 'PAYDAY' | 'BABY' | 'CHARITY' | 'OOW' | 'DREAM' | 'CASHFLOW' | 'Opportunity';
     name: string;
 }
 
 // Mock Board Configuration (Rat Race - 24 Squares)
-export const RAT_RACE_SQUARES: BoardSquare[] = Array.from({ length: 24 }, (_, i) => {
-    let type: BoardSquare['type'] = 'DEAL'; // Default
+// Rat Race: 24 Squares (0-23)
+const RAT_RACE_SQUARES: BoardSquare[] = Array.from({ length: 24 }, (_, i) => {
+    let type: BoardSquare['type'] = 'DEAL';
     if (i % 6 === 0) type = 'PAYDAY';
     else if ([2, 10, 18].includes(i)) type = 'EXPENSE';
     else if ([7, 15, 23].includes(i)) type = 'MARKET';
     else if (i === 12) type = 'BABY';
-    else if (i === 20) type = 'OOW'; // Downsized
+    else if (i === 20) type = 'OOW';
     else if (i === 4) type = 'CHARITY';
     return { index: i, type, name: type };
 });
+
+// Fast Track: 52 Squares (24-75)
+const FAST_TRACK_SQUARES: BoardSquare[] = Array.from({ length: 52 }, (_, i) => {
+    const index = i + 24;
+    let type: BoardSquare['type'] = 'Opportunity'; // Placeholder for FT Deals
+    if (i % 8 === 0) type = 'CASHFLOW'; // FT Payday equivalent
+    else if (i % 10 === 0) type = 'DREAM';
+    return { index, type, name: `FT-${type}` };
+});
+
+export const INITIAL_BOARD = [...RAT_RACE_SQUARES, ...FAST_TRACK_SQUARES];
 
 export class GameEngine {
     state: GameState;
@@ -60,7 +72,7 @@ export class GameEngine {
             currentPlayerIndex: 0,
             currentTurnTime: 120,
             phase: 'ROLL',
-            board: RAT_RACE_SQUARES,
+            board: INITIAL_BOARD,
             log: ['Game Started']
         };
     }
@@ -101,7 +113,7 @@ export class GameEngine {
 
             // Transition
             player.isFastTrack = true;
-            player.position = 0; // Reset to start of Outer Track
+            player.position = 24; // Reset to start of Fast Track (Index 24)
             player.cash += 100000; // Bonus for exiting?
             this.state.log.push(`🚀 ${player.name} ENTERED FAST TRACK!`);
         }
@@ -132,16 +144,19 @@ export class GameEngine {
         const player = this.state.players[this.state.currentPlayerIndex];
 
         if (player.isFastTrack) {
-            const trackLength = 48; // Fast Track length
-            let newPos = player.position + steps;
+            const trackLength = 52; // Fast Track length
+            const startOffset = 24;
+            // Current position is absolute (e.g. 24). Relative is pos - 24.
+            const currentRelative = player.position - startOffset;
+            let newRelative = currentRelative + steps;
 
             // Fast Track Payday Logic
-            if (newPos >= trackLength) {
-                newPos = newPos % trackLength;
+            if (newRelative >= trackLength) {
+                newRelative = newRelative % trackLength;
                 player.cash += player.cashflow; // Or specific Fast Track Amount?
                 this.state.log.push(`${player.name} passed Fast Track Payday! +$${player.cashflow}`);
             }
-            player.position = newPos;
+            player.position = startOffset + newRelative;
 
             // Handle Squares (Mock for now, using modulo to simulate types)
             this.handleFastTrackSquare(player, newPos);
