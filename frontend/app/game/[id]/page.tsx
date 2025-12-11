@@ -28,8 +28,9 @@ export default function GameRoom() {
 
     const [room, setRoom] = useState<Room | null>(null);
     const [isReady, setIsReady] = useState(false);
+    const [error, setError] = useState('');
     const [dream, setDream] = useState('Остров');
-    const [token, setToken] = useState<string>('🔴'); // Default
+    const [token, setToken] = useState<string>('🦊'); // Default
 
     useEffect(() => {
         if (!roomId) return;
@@ -87,98 +88,181 @@ export default function GameRoom() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-900 text-white p-8">
-            <div className="max-w-4xl mx-auto">
-                <header className="mb-8 flex justify-between">
-                    <button onClick={() => router.push('/lobby')} className="text-slate-400">← Назад</button>
-                    <h1 className="text-2xl font-bold">{room.name} <span className="text-sm font-normal text-slate-500">#{room.id}</span></h1>
+        <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#1a2c4e] via-[#0f172a] to-[#020617] text-white flex flex-col items-center justify-center p-4 selection:bg-blue-500/30">
+            <div className="w-full max-w-5xl relative z-10">
+                {/* Header Backdrop Blur */}
+                <div className="absolute inset-0 bg-blue-500/5 blur-[100px] rounded-full pointer-events-none" />
+
+                <header className="mb-8 flex items-center justify-between relative z-20">
+                    <button
+                        onClick={() => router.push('/lobby')}
+                        className="group flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/5 backdrop-blur-sm transition-all text-slate-300 hover:text-white"
+                    >
+                        <span className="group-hover:-translate-x-1 transition-transform">←</span>
+                        <span>Назад</span>
+                    </button>
+                    <div className="text-right">
+                        <h1 className="text-3xl font-black tracking-tight bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
+                            {room.name}
+                        </h1>
+                        <span className="text-xs font-mono text-slate-500 uppercase tracking-widest pl-1">Room #{room.id}</span>
+                    </div>
                 </header>
 
-                <div className="bg-slate-800 rounded-xl p-6 border border-slate-700 mb-8">
-                    <h2 className="text-xl mb-4">Игроки ({room.players.length}/4)</h2>
-                    <div className="space-y-2">
-                        {room.players.map(player => (
-                            <div key={player.id} className="flex items-center justify-between bg-slate-900 p-3 rounded-lg">
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-3 h-3 rounded-full ${player.isReady ? 'bg-green-500' : 'bg-slate-500'}`} />
-                                    <span>{player.token || '❔'} {player.name} {player.id === socket.id && '(Вы)'}</span>
-                                </div>
-                                <div className="text-sm text-slate-400">
-                                    {player.dream || 'Без мечты'}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="flex flex-col gap-4">
-                    <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
-                        <h3 className="mb-3 font-bold">Ваша подготовка</h3>
-
-                        {/* Token Selection */}
-                        <div className="mb-6">
-                            <label className="block mb-2 text-sm text-slate-400">Выберите фишку:</label>
-                            <div className="flex flex-wrap gap-2">
-                                {['🔴', '🟠', '🟡', '🟢', '🔵', '🟣', '⚫', '⚪', '🟤', '🎱'].map((t) => {
-                                    const isTaken = room.players.some(p => p.token === t && p.id !== socket.id);
-                                    const isSelected = token === t;
-                                    return (
-                                        <button
-                                            key={t}
-                                            onClick={() => !isReady && setToken(t)}
-                                            disabled={isTaken || isReady}
-                                            className={`w-10 h-10 text-2xl flex items-center justify-center rounded-full transition-all border-2
-                                                ${isSelected ? 'border-yellow-400 bg-slate-700 scale-110 shadow-[0_0_10px_rgba(250,204,21,0.5)]' : 'border-transparent bg-slate-900'}
-                                                ${isTaken ? 'opacity-30 cursor-not-allowed grayscale' : 'hover:bg-slate-700 cursor-pointer'}
-                                            `}
-                                        >
-                                            {t}
-                                        </button>
-                                    );
-                                })}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-20">
+                    {/* LEFT COLUMN: Player List */}
+                    <div className="lg:col-span-5 space-y-4">
+                        <div className="bg-slate-900/60 backdrop-blur-xl rounded-3xl p-6 border border-white/10 shadow-2xl">
+                            <h2 className="text-sm uppercase tracking-widest text-slate-400 font-bold mb-6 flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                                Игроки в комнате
+                                <span className="ml-auto bg-white/10 px-2 py-0.5 rounded text-xs text-white">{room.players.length}/4</span>
+                            </h2>
+                            <div className="space-y-3">
+                                {room.players.map(player => (
+                                    <div
+                                        key={player.id}
+                                        className={`group flex items-center gap-4 p-4 rounded-2xl transition-all border ${player.id === socket.id
+                                                ? 'bg-blue-600/10 border-blue-500/30 shadow-[0_0_20px_rgba(37,99,235,0.1)]'
+                                                : 'bg-white/5 border-white/5 hover:bg-white/10'
+                                            }`}
+                                    >
+                                        <div className="relative">
+                                            <div className="text-3xl transform group-hover:scale-110 transition-transform duration-300">
+                                                {player.token || '❔'}
+                                            </div>
+                                            {player.isReady && (
+                                                <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-0.5 border-2 border-[#0f172a]">
+                                                    <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="font-bold flex items-center justify-between text-slate-200">
+                                                {player.name}
+                                                {player.id === socket.id && <span className="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded ml-2">ВЫ</span>}
+                                            </div>
+                                            <div className="text-xs text-slate-500 font-medium truncate">
+                                                Мечта: {player.dream || '...'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                                {Array.from({ length: Math.max(0, 4 - room.players.length) }).map((_, i) => (
+                                    <div key={`empty-${i}`} className="p-4 rounded-2xl border border-white/5 border-dashed bg-transparent flex items-center justify-center text-slate-600 text-sm italic">
+                                        Ожидание игрока...
+                                    </div>
+                                ))}
                             </div>
                         </div>
 
-                        <label className="flex flex-col gap-2 mb-6">
-                            <span className="text-sm text-slate-400">Мечта:</span>
-                            <select
-                                value={dream}
-                                onChange={(e) => setDream(e.target.value)}
-                                className="bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 outline-none focus:border-blue-500"
-                                disabled={isReady}
+                        {/* Start Game Button for Host */}
+                        {room.creatorId === socket.id && (
+                            <button
+                                onClick={startGame}
+                                disabled={!room.players.every(p => p.isReady) || room.players.length < 1}
+                                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 py-6 rounded-3xl font-black text-xl shadow-[0_0_40px_rgba(79,70,229,0.3)] transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:grayscale disabled:shadow-none border border-white/10 relative overflow-hidden group"
                             >
-                                <option>Остров</option>
-                                <option>Вилла</option>
-                                <option>Яхта</option>
-                                <option>Личный самолет</option>
-                                <option>Парк развлечений</option>
-                                <option>Космический туризм</option>
-                            </select>
-                        </label>
-
-                        <button
-                            onClick={toggleReady}
-                            className={`w-full py-4 rounded-xl font-bold text-lg transition-all shadow-lg
-                                ${isReady
-                                    ? 'bg-red-500 hover:bg-red-600 shadow-red-900/20'
-                                    : 'bg-green-600 hover:bg-green-500 shadow-green-900/20'
-                                }`}
-                        >
-                            {isReady ? '✖ Не готов' : '✔ Готов к игре'}
-                        </button>
+                                <div className="absolute inset-0 bg-white/20 translate-y-[100%] group-hover:translate-y-0 transition-transform duration-500 blur-md"></div>
+                                <span className="relative flex items-center justify-center gap-3">
+                                    🚀 ЗАПУСТИТЬ ИГРУ
+                                </span>
+                            </button>
+                        )}
                     </div>
 
-                    {room.creatorId === socket.id && (
-                        <button
-                            onClick={startGame}
-                            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 py-4 rounded-xl font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-900/30 border border-blue-500/50"
-                            disabled={!room.players.every(p => p.isReady) || room.players.length < 1}
-                        >
-                            🚀 Начать игру
-                        </button>
-                    )}
+                    {/* RIGHT COLUMN: Settings */}
+                    <div className="lg:col-span-7">
+                        <div className="bg-slate-900/60 backdrop-blur-xl rounded-3xl p-8 border border-white/10 shadow-2xl h-full flex flex-col relative overflow-hidden">
+                            {/* Decorative Background Elements */}
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-[80px] pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
+
+                            <div className="mb-8 relative z-10">
+                                <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 mb-2">Настройка персонажа</h3>
+                                <p className="text-slate-400 text-sm">Выберите аватар и определите свою мечту</p>
+                            </div>
+
+                            <div className="flex-1 relative z-10">
+                                {/* Token Grid */}
+                                <div className="mb-8">
+                                    <label className="text-xs uppercase font-bold text-slate-500 mb-4 block tracking-wider">Выберите Аватар</label>
+                                    <div className="grid grid-cols-5 sm:grid-cols-5 gap-4">
+                                        {['🦁', '🦅', '🦊', '🐻', '🐅', '🐺', '🐘', '🦈', '🦉', '🐬'].map((t) => {
+                                            const isTaken = room.players.some(p => p.token === t && p.id !== socket.id);
+                                            const isSelected = token === t;
+
+                                            return (
+                                                <button
+                                                    key={t}
+                                                    disabled={isTaken}
+                                                    onClick={() => !isReady && setToken(t)}
+                                                    className={`
+                                                        aspect-square rounded-2xl flex items-center justify-center text-4xl relative transition-all duration-300
+                                                        ${isSelected
+                                                            ? 'bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border-indigo-400 ring-2 ring-indigo-500/50 shadow-[0_0_30px_rgba(99,102,241,0.3)] scale-110'
+                                                            : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20 hover:scale-105 border'}
+                                                        ${isTaken ? 'opacity-20 grayscale cursor-not-allowed scale-90' : 'cursor-pointer'}
+                                                    `}
+                                                >
+                                                    <span className={`drop-shadow-lg ${isSelected ? 'animate-bounce-subtle' : ''}`}>{t}</span>
+                                                    {isSelected && (
+                                                        <div className="absolute -top-3 -right-3 w-8 h-8 flex items-center justify-center">
+                                                            <div className="absolute inset-0 bg-blue-500 rounded-full blur-[2px]"></div>
+                                                            <div className="relative bg-blue-500 bg-gradient-to-br from-blue-400 to-indigo-600 text-white rounded-full w-7 h-7 flex items-center justify-center border-2 border-slate-900 shadow-xl">
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    {isTaken && (
+                                                        <div className="absolute inset-0 flex items-center justify-center">
+                                                            <div className="w-full h-[1px] bg-slate-500/50 rotate-45 transform scale-150"></div>
+                                                        </div>
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Dream Selection */}
+                                <div className="mb-8">
+                                    <label className="text-xs uppercase font-bold text-slate-500 mb-2 block tracking-wider">Ваша Мечта</label>
+                                    <div className="relative">
+                                        <select
+                                            value={dream}
+                                            onChange={(e) => setDream(e.target.value)}
+                                            className="w-full bg-black/20 border border-white/10 rounded-2xl px-6 py-4 appearance-none outline-none focus:border-blue-500/50 focus:bg-black/40 transition-all text-lg font-medium text-slate-200 shadow-inner"
+                                            disabled={isReady}
+                                        >
+                                            <option>🏝 Остров</option>
+                                            <option>🏰 Вилла</option>
+                                            <option>🛥 Яхта</option>
+                                            <option>🛩 Личный самолет</option>
+                                            <option>🎢 Парк развлечений</option>
+                                            <option>🚀 Космический туризм</option>
+                                        </select>
+                                        <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                                            ▼
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={toggleReady}
+                                className={`w-full py-6 rounded-2xl font-bold text-lg transition-all transform shadow-xl border
+                                    ${isReady
+                                        ? 'bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20'
+                                        : 'bg-gradient-to-r from-emerald-500 to-teal-500 border-transparent text-white hover:brightness-110 shadow-emerald-500/20 hover:scale-[1.01]'
+                                    }`}
+                            >
+                                {isReady ? '✖ Отменить готовность' : '✨ Я Готов!'}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     );
 }
+```
