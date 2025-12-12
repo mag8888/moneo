@@ -124,6 +124,15 @@ export class GameEngine {
         };
     }
 
+    // Identify user by userId (stable) and update their socket ID
+    updatePlayerId(userId: string, newSocketId: string) {
+        const player = this.state.players.find(p => p.userId === userId);
+        if (player) {
+            console.log(`Updating socket ID for user ${userId} from ${player.id} to ${newSocketId}`);
+            player.id = newSocketId;
+        }
+    }
+
     private checkFastTrackCondition(player: PlayerState) {
         // "passive income covers expenses * 2 AND loans usually 0"
         if (player.passiveIncome >= player.expenses * 2 && player.loanDebt === 0) {
