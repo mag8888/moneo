@@ -1,6 +1,6 @@
 import { Server, Socket } from 'socket.io';
 import { RoomService } from './room.service';
-import { GameEngine } from './engine';
+import { GameEngine, FULL_BOARD } from './engine';
 
 export class GameGateway {
     private io: Server;
@@ -21,13 +21,15 @@ export class GameGateway {
         for (const room of activeRooms) {
             if (room.gameState) {
                 const engine = new GameEngine(room.id, room.players);
-                // We need a way to hydration the engine with existing state. 
-                // Since GameEngine doesn't have setState, we might need to add it or hack it.
-                // Or just constructor should check if we can pass state.
-                // For now, let's assume we can assign it (or I'll add a method to Engine next).
+                // Hydrate state but FORCE UPDATE BOARD structure (to apply layout fixes to existing games)
                 Object.assign(engine.state, room.gameState);
+
+                // CRITICAL FIX: Overwrite the restored board with the new code definition
+                // This ensures old games get the new Payday/Deal layout
+                engine.state.board = FULL_BOARD;
+
                 this.games.set(room.id, engine);
-                console.log(`Restored game ${room.id} (Turn: ${room.gameState.currentTurnTime})`);
+                console.log(`Restored game ${room.id} (Turn: ${room.gameState.currentTurnTime}) | Board Updated`);
             }
         }
     }
