@@ -136,13 +136,14 @@ export const BankModal = ({ isOpen, onClose, player, roomId, transactions, playe
                             <span className="text-slate-500 font-mono text-green-400 font-bold">+${availableLoan.toLocaleString()}</span>
                         </div>
 
-                        type="number"
-                        step={1000}
-                        min={0}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white mb-3 outline-none focus:border-blue-500"
-                        placeholder="Сумма (кратно 1000)"
-                        value={amount || ''}
-                        onChange={e => setAmount(Number(e.target.value))}
+                        <input
+                            type="number"
+                            step={1000}
+                            min={0}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white mb-3 outline-none focus:border-blue-500"
+                            placeholder="Сумма (кратно 1000)"
+                            value={amount || ''}
+                            onChange={e => setAmount(Number(e.target.value))}
                         />
 
                         <div className="grid grid-cols-2 gap-2">
