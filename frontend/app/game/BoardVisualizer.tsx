@@ -176,31 +176,7 @@ export const BoardVisualizer = ({ board, players, animatingPos, currentPlayerId 
                             const angleOffset = 90;
                             const angleDeg = (posIndex * (360 / totalSteps)) + angleOffset;
                             const angleRad = angleDeg * (Math.PI / 180);
-                            const radius = 42; // Match the new implementation plan + logic
-                            // Actually wait, Inner Track container is inset-[15%]. 
-                            // The radius of 32% (in getPosStyle) is relative to IT container?
-                            // No, getPosStyle was % of FULL container. 
-                            // In this rewrite, I rendered Inner Track Squares inside a container `inset-[15%]`?
-                            // No, let's keep it simple. Tokens are absolute in MAIN container.
-                            // So use radius 32 (from getPosStyle logic) if that's what we used for squares.
-                            // BUT...
-                            // In my code above, Inner Track squares are in `absolute inset-[15%]`. 
-                            // This means their logic inside `getPosStyle` (radius 32) is relative to THAT container (which is 70% size).
-                            // This messes up alignment if we render Tokens in Main Container.
-
-                            // FIXED LOGIC: Render tokens in the SAME container structure or adjust math.
-                            // Easier: Render tokens in Main Container, using strict % math relative to Main.
-                            // Inner Track is roughly at radius X.
-                            // If Inner Track container is inset 15%, its size 70%.
-                            // Radius 32% of 70% = 22.4% of Main. Too small.
-                            // Previous working code had consistent context.
-
-                            // Let's adjust Radius for Tokens to match visually.
-                            // If Squares use radius 32 inside the inset container...
-                            // Actually, I'll modify the loop above to NOT use inset container for squares, 
-                            // but keep them in Main Container for simplicity of math.
-
-                            const radius = 32;
+                            const radius = 42;
                             const x = 50 + radius * Math.cos(angleRad);
                             const y = 50 + radius * Math.sin(angleRad);
                             style = {
