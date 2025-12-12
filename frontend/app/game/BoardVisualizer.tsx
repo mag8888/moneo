@@ -74,7 +74,7 @@ export const BoardVisualizer = ({ board, players, animatingPos, currentPlayerId 
         <div className="w-full h-full relative p-4 flex items-center justify-center">
 
             {/* STICT SQUARE CONTAINER */}
-            <div className="relative w-full aspect-square max-w-[85vh] max-h-[85vh]">
+            <div className="relative aspect-square h-full max-h-full max-w-full">
 
                 {/* 1. OUTER TRACK (GRID) */}
                 <div className="absolute inset-0 grid grid-cols-[repeat(13,minmax(0,1fr))] grid-rows-[repeat(13,minmax(0,1fr))] gap-1 pointer-events-none">

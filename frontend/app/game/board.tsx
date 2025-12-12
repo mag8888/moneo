@@ -190,7 +190,7 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
             )}
 
             {/* MAIN GRID */}
-            <div className="flex-1 flex flex-col lg:grid lg:grid-cols-[340px_1fr_300px] overflow-hidden">
+            <div className="flex-1 flex flex-col lg:grid lg:grid-cols-[350px_1fr_350px] overflow-hidden">
 
                 {/* LEFT SIDEBAR / MOBILE MENU */}
                 <div className={`
