@@ -86,11 +86,24 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
         socket.on('dice_rolled', (data) => {
             setDiceValue(data.roll);
             setShowDice(true);
-            setPendingState(data.state);
+            setPendingState(data.state); // Store full state for later
 
+            // Immediate: Update positions for animation ONLY (if we had separated position state, but we rely on full state for rendering board tokens...)
+            // Workaround: We set state but maybe suppress modals via local flag?
+            // Actually, existing code sets state inside timeout.
+            // Let's adjust the timeouts to be more deliberate.
+
+            // 1. Show Dice (Already happens)
             setTimeout(() => {
                 setShowDice(false);
+
+                // 2. Start Moving (Update State to trigger visualizer movement)
                 setState(data.state);
+
+                // 3. WAIT checks (Square Info & Modals)
+                // calculated delay based on steps? For now fixed 1s after move starts + move duration?
+                // The visualizer takes about 300ms/step? 
+                // Let's add a robust delay before showing 'square info' or unlocking UI.
 
                 setTimeout(() => {
                     // Find player to get position
@@ -103,10 +116,10 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
 
                     if (square && !['roll_dice', 'end_turn'].includes(data.state.phase)) {
                         setSquareInfo(square);
-                        setTimeout(() => setSquareInfo(null), 3500);
+                        setTimeout(() => setSquareInfo(null), 3000); // reduced from 3500
                     }
-                }, 1000); // Wait for token move
-            }, 2500);
+                }, 2000); // 2s Delay to allow piece to move before showing info/cards
+            }, 2000); // 2s Dice spin
         });
 
         socket.on('state_updated', (data) => setState(data.state));
@@ -193,7 +206,7 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
     return (
         <div className="h-screen bg-[#0f172a] text-white font-sans flex flex-col overflow-hidden relative">
 
-            {/* 🎲 DICE OVERLAY */}
+            // 🎲 DICE OVERLAY
             {showDice && (
                 <div className="absolute inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center pointer-events-none">
                     <div className="flex flex-col items-center animate-bounce">
@@ -203,6 +216,37 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                                 {diceValue}
                             </div>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {/* ⚡ OPPORTUNITY CHOICE MODAL */}
+            {state.phase === 'OPPORTUNITY_CHOICE' && isMyTurn && (
+                <div className="absolute inset-0 z-[95] bg-black/80 backdrop-blur-md flex items-center justify-center animate-in fade-in duration-300">
+                    <div className="bg-[#1e293b] border border-slate-600 p-8 rounded-3xl shadow-2xl max-w-lg w-full text-center relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500"></div>
+                        <h2 className="text-3xl font-black text-white mb-2 tracking-wide uppercase">Opportunity!</h2>
+                        <p className="text-slate-400 mb-8">Choose the size of your deal.</p>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <button
+                                onClick={() => socket.emit('resolve_opportunity', { roomId, size: 'SMALL' })}
+                                className="group relative p-6 rounded-2xl bg-slate-800 border border-slate-700 hover:border-green-500 hover:bg-slate-700/50 transition-all duration-300"
+                            >
+                                <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">🐟</div>
+                                <div className="text-lg font-bold text-green-400 mb-1">Small Deal</div>
+                                <div className="text-xs text-slate-500 font-mono">Cost $0 - $5,000</div>
+                            </button>
+
+                            <button
+                                onClick={() => socket.emit('resolve_opportunity', { roomId, size: 'BIG' })}
+                                className="group relative p-6 rounded-2xl bg-slate-800 border border-slate-700 hover:border-yellow-500 hover:bg-slate-700/50 transition-all duration-300"
+                            >
+                                <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">🐋</div>
+                                <div className="text-lg font-bold text-yellow-400 mb-1">Big Deal</div>
+                                <div className="text-xs text-slate-500 font-mono">Cost $6,000+</div>
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

@@ -7,7 +7,7 @@ export interface GameState {
     players: PlayerState[];
     currentPlayerIndex: number;
     currentTurnTime: number;
-    phase: 'ROLL' | 'ACTION' | 'END';
+    phase: 'ROLL' | 'ACTION' | 'END' | 'OPPORTUNITY_CHOICE';
     board: BoardSquare[];
     currentCard?: Card;
     log: string[];
@@ -243,13 +243,8 @@ export class GameEngine {
         if (square.type === 'PAYDAY') {
             this.state.log.push(`Entered Payday! (Cashflow added on pass)`);
         } else if (square.type === 'MARKET' || square.type === 'DEAL') {
-            // Both MARKET and DEAL trigger Opportunity Cards for this MVP
-            // In full game: DEAL = Buy, MARKET = Sell.
-            // Here we just use our 'Market Deck' which contains Buy opportunities.
-            const card = this.cardManager.drawMarket();
-            this.state.currentCard = card;
-            this.state.log.push(`Opportunity: ${card.title}`);
-            // Wait for user action
+            // STOP AUTO-DRAW. Prompt for Small/Big Deal.
+            this.state.phase = 'OPPORTUNITY_CHOICE';
         } else if (square.type === 'EXPENSE') {
             const card = this.cardManager.drawExpense();
             this.state.currentCard = card;
@@ -284,6 +279,21 @@ export class GameEngine {
         }
     }
 
+    resolveOpportunity(size: 'SMALL' | 'BIG') {
+        const player = this.state.players[this.state.currentPlayerIndex];
+
+        let card: Card;
+        if (size === 'SMALL') {
+            card = this.cardManager.drawSmallDeal();
+        } else {
+            card = this.cardManager.drawBigDeal();
+        }
+
+        this.state.currentCard = card;
+        this.state.log.push(`${player.name} chose ${size} DEAL: ${card.title}`);
+        this.state.phase = 'ACTION'; // Back to action phase to buy/pass
+    }
+
     takeLoan(playerId: string, amount: number) {
         const player = this.state.players.find(p => p.id === playerId);
         if (!player) return;
@@ -297,6 +307,21 @@ export class GameEngine {
         player.cashflow = player.income - player.expenses;
 
         this.state.log.push(`${player.name} took loan $${amount}. Expenses +$${interest}/mo`);
+    }
+
+    resolveOpportunity(size: 'SMALL' | 'BIG') {
+        const player = this.state.players[this.state.currentPlayerIndex];
+
+        let card: Card;
+        if (size === 'SMALL') {
+            card = this.cardManager.drawSmallDeal();
+        } else {
+            card = this.cardManager.drawBigDeal();
+        }
+
+        this.state.currentCard = card;
+        this.state.log.push(`${player.name} chose ${size} DEAL: ${card.title}`);
+        this.state.phase = 'ACTION'; // Back to action phase to buy/pass
     }
 
     repayLoan(playerId: string, amount: number) {
