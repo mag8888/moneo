@@ -63,7 +63,11 @@ function GameContent() {
             });
         };
 
-        joinGame();
+        if (socket.connected) {
+            joinGame();
+        } else {
+            socket.connect();
+        }
 
         const handleConnect = () => {
             console.log("Reconnected. Re-joining...");
@@ -105,7 +109,8 @@ function GameContent() {
             socket.off('game_started');
             socket.off('player_kicked');
             socket.off('error');
-            socket.emit('leave_room', { roomId });
+            // Do NOT leave room explicitly on unmount, relies on disconnect
+            // preventing accidental drops on simple nav
         };
     }, [roomId, router]);
 
