@@ -41,6 +41,27 @@ import fs from 'fs';
 
 // ...
 
+// Serve specific HTML files for known routes to avoid wildcard issues
+app.get(['/game', '/game.html'], (req, res) => {
+    const file = path.join(__dirname, '../../frontend/out/game.html');
+    if (fs.existsSync(file)) {
+        res.sendFile(file);
+    } else {
+        console.error(`Missing game.html at ${file}`);
+        res.status(404).send('Game file not found');
+    }
+});
+
+app.get(['/lobby', '/lobby.html'], (req, res) => {
+    const file = path.join(__dirname, '../../frontend/out/lobby.html');
+    if (fs.existsSync(file)) {
+        res.sendFile(file);
+    } else {
+        console.error(`Missing lobby.html at ${file}`);
+        res.sendFile(path.join(__dirname, '../../frontend/out/index.html')); // Fallback to login?
+    }
+});
+
 app.get('/game/:id', (req, res) => {
     // Redirect legacy URL to new Query Param URL
     const id = req.params.id;
