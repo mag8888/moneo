@@ -97,6 +97,7 @@ export class GameEngine {
     cardManager: CardManager;
 
     constructor(roomId: string, players: IPlayer[]) {
+        // Init CardManager
         this.cardManager = new CardManager();
         this.state = {
             roomId,
