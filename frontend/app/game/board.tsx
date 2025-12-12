@@ -206,7 +206,6 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
     return (
         <div className="h-screen bg-[#0f172a] text-white font-sans flex flex-col overflow-hidden relative">
 
-            // 🎲 DICE OVERLAY
             {showDice && (
                 <div className="absolute inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center pointer-events-none">
                     <div className="flex flex-col items-center animate-bounce">
@@ -332,24 +331,7 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                         ) : <div className="text-xs text-slate-600 text-center py-4 italic">Нет активов</div>}
                     </div>
 
-                    {/* Players Mini List */}
-                    <div className="bg-[#151b2b] rounded-2xl p-5 border border-slate-800 shadow-lg flex-1 min-h-[150px] overflow-y-auto custom-scrollbar">
-                        <h3 className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mb-4 flex items-center gap-2">
-                            <span>👥</span> Игроки
-                        </h3>
-                        <div className="space-y-2">
-                            {state.players.map((p: any) => (
-                                <div key={p.id} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${p.id === currentPlayer.id ? 'bg-slate-800/80 border-blue-500/50 shadow-lg shadow-blue-900/10 scale-[1.02]' : 'bg-slate-900/30 border-slate-800/50'}`}>
-                                    <div className="text-lg bg-slate-950 w-8 h-8 flex items-center justify-center rounded-xl border border-slate-800 shadow-inner">{p.token}</div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="text-sm font-bold text-slate-200 truncate">{p.name}</div>
-                                        <div className="text-[10px] text-slate-500 font-mono">${p.cash?.toLocaleString()}</div>
-                                    </div>
-                                    {p.id === currentPlayer.id && <div className="text-[8px] text-blue-400 bg-blue-900/20 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider animate-pulse">Ходит</div>}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+
                 </div>
 
                 {/* CENTER BOARD */}
@@ -504,6 +486,25 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                             <span className="text-xl group-hover:scale-110 transition-transform">🏦</span>
                             <span className="text-[10px] text-slate-200 font-bold uppercase tracking-widest">Открыть Банк</span>
                         </button>
+                    </div>
+
+                    {/* Players Mini List (Moved to Right) */}
+                    <div className="bg-[#151b2b] rounded-2xl p-5 border border-slate-800 shadow-lg flex-1 min-h-[200px] overflow-y-auto custom-scrollbar">
+                        <h3 className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mb-4 flex items-center gap-2">
+                            <span>👥</span> Игроки
+                        </h3>
+                        <div className="space-y-2">
+                            {state.players.map((p: any) => (
+                                <div key={p.id} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${p.id === currentPlayer.id ? 'bg-slate-800/80 border-blue-500/50 shadow-lg shadow-blue-900/10 scale-[1.02]' : 'bg-slate-900/30 border-slate-800/50'}`}>
+                                    <div className="text-lg bg-slate-950 w-8 h-8 flex items-center justify-center rounded-xl border border-slate-800 shadow-inner">{p.token}</div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-sm font-bold text-slate-200 truncate">{p.name}</div>
+                                        <div className="text-[10px] text-slate-500 font-mono">${p.cash?.toLocaleString()}</div>
+                                    </div>
+                                    {p.id === currentPlayer.id && <div className="text-[8px] text-blue-400 bg-blue-900/20 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider animate-pulse">Ходит</div>}
+                                </div>
+                            ))}
+                        </div>
                     </div>
 
                     <h3 className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mb-3 flex items-center gap-2">
