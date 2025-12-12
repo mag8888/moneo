@@ -19,21 +19,24 @@ export default function Lobby() {
     const [isCreating, setIsCreating] = useState(false);
     const [newRoomName, setNewRoomName] = useState('');
     const [maxPlayers, setMaxPlayers] = useState(4);
+
+    // Lazy init to avoid hydration mismatch while reading from LS immediately on client
     const [user, setUser] = useState<any>(null);
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        // Auth Check
+        setMounted(true);
         const userStr = localStorage.getItem('user');
-        if (!userStr) {
+        if (userStr) {
+            setUser(JSON.parse(userStr));
+        } else {
             router.push('/');
-            return;
         }
-        setUser(JSON.parse(userStr));
 
         socket.emit('get_rooms', (data: Room[]) => setRooms(data));
         socket.on('rooms_updated', (data: Room[]) => setRooms(data));
         return () => { socket.off('rooms_updated'); };
-    }, [router]);
+    }, []);
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -59,7 +62,7 @@ export default function Lobby() {
         router.push(`/game?id=${roomId}`);
     };
 
-    if (!user) return null; // Prevent flicker
+    if (!mounted || !user) return <div className="min-h-screen bg-slate-900 flex items-center justify-center text-slate-500">Загрузка...</div>;
 
     return (
         <div className="min-h-screen bg-slate-900 text-white p-8">
