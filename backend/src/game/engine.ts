@@ -46,22 +46,38 @@ export interface PlayerState extends IPlayer {
 
 export interface BoardSquare {
     index: number;
-    type: 'DEAL' | 'MARKET' | 'EXPENSE' | 'PAYDAY' | 'BABY' | 'CHARITY' | 'OOW' | 'DREAM';
+    type: 'DEAL' | 'MARKET' | 'EXPENSE' | 'PAYDAY' | 'BABY' | 'CHARITY' | 'DOWNSIZED' | 'DREAM';
     name: string;
 }
 
 // Mock Board Configuration (Rat Race - 24 Squares)
 // Mock Board Configuration (Rat Race - 24 Squares)
-export const RAT_RACE_SQUARES: BoardSquare[] = Array.from({ length: 24 }, (_, i) => {
-    let type: BoardSquare['type'] = 'DEAL'; // Default
-    if ([6, 14, 22].includes(i)) type = 'PAYDAY';
-    else if ([2, 10, 18].includes(i)) type = 'EXPENSE';
-    else if ([7, 15, 23].includes(i)) type = 'MARKET';
-    else if (i === 12) type = 'BABY';
-    else if (i === 20) type = 'OOW'; // Downsized
-    else if (i === 4) type = 'CHARITY';
-    return { index: i, type, name: type };
-});
+export const RAT_RACE_SQUARES: BoardSquare[] = [
+    { index: 0, type: 'DEAL', name: 'Opportunity' },
+    { index: 1, type: 'EXPENSE', name: 'Doodad' },
+    { index: 2, type: 'DEAL', name: 'Opportunity' },
+    { index: 3, type: 'CHARITY', name: 'Charity' },
+    { index: 4, type: 'DEAL', name: 'Opportunity' },
+    { index: 5, type: 'PAYDAY', name: 'Payday' },
+    { index: 6, type: 'DEAL', name: 'Opportunity' },
+    { index: 7, type: 'MARKET', name: 'Market' },
+    { index: 8, type: 'DEAL', name: 'Opportunity' },
+    { index: 9, type: 'EXPENSE', name: 'Doodad' },
+    { index: 10, type: 'DEAL', name: 'Opportunity' },
+    { index: 11, type: 'BABY', name: 'Baby' },
+    { index: 12, type: 'DEAL', name: 'Opportunity' },
+    { index: 13, type: 'PAYDAY', name: 'Payday' },
+    { index: 14, type: 'DEAL', name: 'Opportunity' },
+    { index: 15, type: 'MARKET', name: 'Market' },
+    { index: 16, type: 'DEAL', name: 'Opportunity' },
+    { index: 17, type: 'EXPENSE', name: 'Doodad' },
+    { index: 18, type: 'DEAL', name: 'Opportunity' },
+    { index: 19, type: 'DOWNSIZED', name: 'Downsized' },
+    { index: 20, type: 'DEAL', name: 'Opportunity' },
+    { index: 21, type: 'PAYDAY', name: 'Payday' },
+    { index: 22, type: 'DEAL', name: 'Opportunity' },
+    { index: 23, type: 'MARKET', name: 'Market' },
+];
 
 // Mock Fast Track Configuration (48 Squares)
 export const FAST_TRACK_SQUARES: BoardSquare[] = Array.from({ length: 48 }, (_, i) => {
@@ -281,7 +297,7 @@ export class GameEngine {
                     this.state.log.push(`No Baby (Roll: ${roll}).`);
                 }
             }
-        } else if (square.type === 'OOW') {
+        } else if (square.type === 'DOWNSIZED') {
             const expenses = player.expenses;
             player.cash -= expenses; // Pay full expenses
             player.skippedTurns = 2; // Lose 2 turns

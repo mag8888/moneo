@@ -4,9 +4,9 @@ import React from 'react';
 const getSticker = (type: string, name: string) => {
     if (type === 'PAYDAY') return '💰';
     if (type === 'CASHFLOW') return '💸';
-    if (type === 'OPPORTUNITY') return '⚡';
-    if (type === 'MARKET') return '🏠';
-    if (type === 'DOODAD') return '🛍️';
+    if (type === 'DEAL' || type === 'OPPORTUNITY') return '🟢'; // Green Circle for Opportunity
+    if (type === 'MARKET') return '🏪';
+    if (type === 'EXPENSE' || type === 'DOODAD') return '🛍️';
     if (type === 'CHARITY') return '❤️';
     if (type === 'BABY') return '👶';
     if (type === 'DOWNSIZED') return '📉';
@@ -18,12 +18,15 @@ const getGradient = (type: string, isFT: boolean) => {
         if (type === 'CASHFLOW') return 'bg-gradient-to-br from-emerald-900 to-emerald-950 border-emerald-600/50';
         return 'bg-gradient-to-br from-slate-900 to-slate-950 border-amber-900/30';
     }
-    if (type === 'PAYDAY') return 'bg-gradient-to-br from-yellow-900/80 to-yellow-950 border-yellow-500/50';
-    if (type === 'OPPORTUNITY') return 'bg-gradient-to-br from-green-900/40 to-green-950 border-green-500/30';
-    if (type === 'MARKET') return 'bg-gradient-to-br from-blue-900/40 to-blue-950 border-blue-500/30';
-    if (type === 'DOODAD') return 'bg-gradient-to-br from-red-900/40 to-red-950 border-red-500/30';
-    if (type === 'BABY') return 'bg-gradient-to-br from-pink-900/40 to-pink-950 border-pink-500/30';
-    if (type === 'DOWNSIZED') return 'bg-gradient-to-br from-purple-900/40 to-purple-950 border-purple-500/50';
+    // RAT RACE COLORS
+    if (type === 'PAYDAY') return 'bg-gradient-to-br from-yellow-600/20 to-yellow-900/80 border-yellow-500/50'; // Yellow
+    if (type === 'DEAL' || type === 'OPPORTUNITY') return 'bg-gradient-to-br from-green-600/20 to-green-900/80 border-green-500/50'; // Green
+    if (type === 'MARKET') return 'bg-gradient-to-br from-blue-600/20 to-blue-900/80 border-blue-500/50'; // Blue
+    if (type === 'EXPENSE' || type === 'DOODAD') return 'bg-gradient-to-br from-pink-600/20 to-pink-900/80 border-pink-500/50'; // Pink
+    if (type === 'BABY') return 'bg-gradient-to-br from-purple-600/20 to-purple-900/80 border-purple-500/50'; // Purple/Violet
+    if (type === 'CHARITY') return 'bg-gradient-to-br from-orange-600/20 to-orange-900/80 border-orange-500/50'; // Orange
+    if (type === 'DOWNSIZED') return 'bg-gradient-to-br from-slate-950 to-black border-slate-600'; // Black
+
     return 'bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700';
 };
 
