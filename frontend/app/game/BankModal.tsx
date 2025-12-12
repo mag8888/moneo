@@ -16,6 +16,7 @@ export const BankModal = ({ isOpen, onClose, player, roomId, transactions, playe
     const [amount, setAmount] = useState<number>(0);
     const [recipientId, setRecipientId] = useState<string>('');
     const [transferAmount, setTransferAmount] = useState<number>(0);
+    const [showExpenses, setShowExpenses] = useState(false);
 
     if (!isOpen) return null;
 
@@ -72,7 +73,45 @@ export const BankModal = ({ isOpen, onClose, player, roomId, transactions, playe
 
                     <div className="space-y-2 text-sm bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
                         <div className="flex justify-between"><span className="text-green-400">↗ Доход:</span> <span className="text-white">${player.income?.toLocaleString()}</span></div>
-                        <div className="flex justify-between"><span className="text-red-400">↘ Расходы:</span> <span className="text-white">${player.expenses?.toLocaleString()}</span></div>
+
+                        {/* Expenses Toggle */}
+                        <div
+                            onClick={() => setShowExpenses(!showExpenses)}
+                            className="flex justify-between cursor-pointer hover:bg-white/5 p-1 -m-1 rounded transition-colors group"
+                        >
+                            <span className="text-red-400 flex items-center gap-1">
+                                ↘ Расходы:
+                                <span className={`text-[10px] text-slate-500 transition-transform duration-200 ${showExpenses ? 'rotate-180' : ''}`}>▼</span>
+                            </span>
+                            <span className="text-white decoration-dashed decoration-slate-600 underline-offset-4 group-hover:underline">
+                                ${player.expenses?.toLocaleString()}
+                            </span>
+                        </div>
+
+                        {/* Expenses Breakdown */}
+                        {showExpenses && (
+                            <div className="mt-2 pl-2 text-xs text-slate-400 space-y-1 border-l-2 border-slate-700 animate-in slide-in-from-top-2 duration-200">
+                                <div className="flex justify-between">
+                                    <span>Налоги и Жизнь:</span>
+                                    <span>${(player.expenses - (player.liabilities?.reduce((sum: number, l: any) => sum + (l.expense || 0), 0) || 0) - ((player.childrenCount || 0) * (player.childCost || 0))).toLocaleString()}</span>
+                                </div>
+                                {(player.childrenCount || 0) > 0 && (
+                                    <div className="flex justify-between text-yellow-500/80">
+                                        <span>Дети ({player.childrenCount}):</span>
+                                        <span>${(player.childrenCount * player.childCost).toLocaleString()}</span>
+                                    </div>
+                                )}
+                                {player.liabilities?.map((l: any, i: number) => (
+                                    l.expense > 0 && (
+                                        <div key={i} className="flex justify-between text-red-400/80">
+                                            <span>{l.name}:</span>
+                                            <span>${l.expense.toLocaleString()}</span>
+                                        </div>
+                                    )
+                                ))}
+                            </div>
+                        )}
+
                         <div className="flex justify-between pt-2 border-t border-slate-700"><span className="text-yellow-400 font-bold">PAYDAY:</span> <span className="text-white font-bold">${player.cashflow?.toLocaleString()}/мес</span></div>
                     </div>
 
