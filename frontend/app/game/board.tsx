@@ -399,12 +399,12 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                     </div>
 
                     {/* Assets */}
-                    <div className="bg-[#151b2b] rounded-2xl p-5 border border-slate-800 shadow-lg">
-                        <h3 className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mb-4 flex items-center gap-2">
+                    <div className="bg-[#151b2b] rounded-2xl p-5 border border-slate-800 shadow-lg flex-1 flex flex-col min-h-0 relative overflow-hidden">
+                        <h3 className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mb-4 flex items-center gap-2 flex-shrink-0">
                             <span>🏠</span> Ваши Активы
                         </h3>
                         {me.assets?.length > 0 ? (
-                            <div className="space-y-2 max-h-[150px] overflow-y-auto custom-scrollbar pr-1">
+                            <div className="space-y-2 overflow-y-auto custom-scrollbar pr-1 flex-1">
                                 {me.assets.map((a: any, i: number) => (
                                     <div key={i} className="flex justify-between items-center text-xs p-3 bg-slate-900/50 rounded-xl border border-slate-800/50 hover:border-slate-700 transition-colors">
                                         <span className="text-slate-300 font-medium">{a.title}</span>
