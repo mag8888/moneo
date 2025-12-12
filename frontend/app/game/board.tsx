@@ -145,19 +145,7 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
     const handleLoan = (amount: number) => socket.emit('take_loan', { roomId, amount });
     const handleRepay = (amount: number) => socket.emit('repay_loan', { roomId, amount });
     const handleEndTurn = () => socket.emit('end_turn', { roomId });
-    // handleRoll and handleBuy are likely defined below or need to be checked.
-    // Wait, checking file... handleRoll and handleBuy were defined right after my previous deletion block?
-    // No, I deleted the entire block. And then I added handleRoll/handleBuy BACK in a subsequent edit in a DIFFERENT location?
-    // Let's check lines 59-67 from the previous `view_file`.
-    // Yes:
-    // 59:     const handleRoll = () => {
-    // 60:         socket.emit('roll_dice', { roomId });
-    // 61:         setHasRolled(true);
-    // 62:     };
-    // 63:
-    // 64:     const handleBuy = () => {
-    // 65:         socket.emit('buy_asset', { roomId });
-    // 66:     };
+
 
     // So I only need to restore handleLoan, handleRepay, handleEndTurn.
 
@@ -548,8 +536,8 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                                 className={`p - 4 rounded - xl border flex flex - col items - center gap - 2 group transition - all duration - 200
                                 ${
     isMyTurn && state.phase === 'ROLL' && !state.currentCard && !hasRolled
-    ? 'bg-gradient-to-b from-green-600 to-green-700 border-green-500 text-white shadow-xl shadow-green-900/40 hover:scale-[1.02] hover:shadow-green-900/60 cursor-pointer'
-    : 'bg-slate-800/50 border-slate-700 text-slate-500 opacity-50 cursor-not-allowed'
+        ? 'bg-gradient-to-b from-green-600 to-green-700 border-green-500 text-white shadow-xl shadow-green-900/40 hover:scale-[1.02] hover:shadow-green-900/60 cursor-pointer'
+        : 'bg-slate-800/50 border-slate-700 text-slate-500 opacity-50 cursor-not-allowed'
 } `}
                             >
                                 <span className="text-2xl filter drop-shadow-md group-hover:rotate-12 transition-transform duration-300">🎲</span>
@@ -561,8 +549,8 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                                 className={`p - 4 rounded - xl border flex flex - col items - center gap - 2 group transition - all duration - 200
                                 ${
     isMyTurn && (state.phase !== 'ROLL' || !!state.currentCard || hasRolled)
-    ? 'bg-gradient-to-b from-blue-600 to-blue-700 border-blue-500 text-white shadow-xl shadow-blue-900/40 hover:scale-[1.02] hover:shadow-blue-900/60 cursor-pointer'
-    : 'bg-slate-800/50 border-slate-700 text-slate-500 opacity-50 cursor-not-allowed'
+        ? 'bg-gradient-to-b from-blue-600 to-blue-700 border-blue-500 text-white shadow-xl shadow-blue-900/40 hover:scale-[1.02] hover:shadow-blue-900/60 cursor-pointer'
+        : 'bg-slate-800/50 border-slate-700 text-slate-500 opacity-50 cursor-not-allowed'
 } `}
                             >
                                 <span className="text-2xl filter drop-shadow-md group-hover:translate-x-1 transition-transform duration-300">➡</span>
