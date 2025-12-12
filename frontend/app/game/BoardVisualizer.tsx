@@ -39,9 +39,10 @@ export const BoardVisualizer = ({ board, players, animatingPos, currentPlayerId 
             const totalSteps = 24;
             const angleOffset = 90;
             const angleDeg = (index * (360 / totalSteps)) + angleOffset;
+            const angleDegCorrected = angleDeg; // removed offset logic if redundant, but keeping for rotation
             const angleRad = angleDeg * (Math.PI / 180);
 
-            const radius = 40; // Increased radius for larger inner track
+            const radius = 46; // Maximized radius
             const x = 50 + radius * Math.cos(angleRad);
             const y = 50 + radius * Math.sin(angleRad);
 
@@ -71,7 +72,7 @@ export const BoardVisualizer = ({ board, players, animatingPos, currentPlayerId 
     };
 
     return (
-        <div className="w-full h-full relative p-4 flex items-center justify-center">
+        <div className="w-full h-full relative p-2 flex items-center justify-center">
 
             {/* STICT SQUARE CONTAINER */}
             <div className="relative aspect-square h-full max-h-full max-w-full">
@@ -104,14 +105,15 @@ export const BoardVisualizer = ({ board, players, animatingPos, currentPlayerId 
                     {/* CENTER HUB (Inside Grid Layer) */}
                     <div className="col-start-4 col-end-11 row-start-4 row-end-11 relative rounded-full bg-slate-950 border-4 border-slate-800/80 shadow-2xl flex flex-col items-center justify-center z-10 overflow-hidden pointer-events-auto">
                         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900 via-slate-900 to-black animate-pulse"></div>
-                        <h1 className="text-3xl lg:text-4xl font-black bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent transform -skew-x-6">MONEO</h1>
-                        <span className="text-[8px] text-slate-500 tracking-[0.4em] uppercase font-bold mt-1">Energy of Money</span>
+                        <h1 className="text-3xl lg:text-5xl font-black bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent transform -skew-x-6 drop-shadow-2xl">MONEO</h1>
+                        <span className="text-[10px] text-slate-500 tracking-[0.4em] uppercase font-bold mt-1">Energy of Money</span>
                     </div>
 
                 </div>
 
                 {/* 2. INNER TRACK (ABSOLUTE) */}
-                <div className="absolute inset-[15%] rounded-full border border-slate-800/30 pointer-events-none">
+                {/* Reduced inset to maximize size (15% -> 4%) */}
+                <div className="absolute inset-[4%] rounded-full border border-slate-800/30 pointer-events-none">
                     <div className="absolute inset-0 rounded-full border-2 border-dashed border-slate-700/20 animate-spin-slow-reverse opacity-30"></div>
                     {board.filter((sq: any) => !isFastTrackSquare(sq.index)).map((sq: any) => {
                         const style = getPosStyle(sq.index, false);
@@ -120,7 +122,7 @@ export const BoardVisualizer = ({ board, players, animatingPos, currentPlayerId 
                             <div
                                 key={sq.index}
                                 className={`
-                                    w-[14%] h-[14%] rounded-xl shadow-xl border
+                                    w-[13%] h-[13%] rounded-xl shadow-xl border
                                     flex items-center justify-center pointer-events-auto
                                     transition-all hover:scale-125 hover:z-50 duration-300
                                     ${gradient}
@@ -129,21 +131,20 @@ export const BoardVisualizer = ({ board, players, animatingPos, currentPlayerId 
                                 title={sq.name}
                             >
                                 <div className="flex flex-col items-center justify-center transform hover:rotate-0 transition-transform">
-                                    <span className="text-xl lg:text-2xl filter drop-shadow-lg">{getSticker(sq.type, sq.name)}</span>
-                                    <span className="text-[6px] font-bold text-slate-400 uppercase tracking-tight mt-[-2px] bg-black/40 px-1 rounded-full backdrop-blur-sm hidden lg:block">
+                                    <span className="text-xl lg:text-3xl filter drop-shadow-lg">{getSticker(sq.type, sq.name)}</span>
+                                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight mt-[-2px] bg-black/40 px-1.5 rounded-full backdrop-blur-sm hidden lg:block scale-75">
                                         {sq.type === 'OPPORTUNITY' ? (sq.name.includes('Big') ? 'Big' : 'Small') : sq.type}
                                     </span>
                                 </div>
-                                <span className="absolute -top-1 -right-1 w-3 h-3 bg-slate-900 border border-slate-700 rounded-full flex items-center justify-center text-[6px] text-slate-500">{sq.index}</span>
+                                <span className="absolute -top-1 -right-1 w-4 h-4 bg-slate-900 border border-slate-700 rounded-full flex items-center justify-center text-[8px] text-slate-500">{sq.index}</span>
                             </div>
                         );
                     })}
                 </div>
 
                 {/* 3. PLAYER TOKENS (ABSOLUTE OVERLAY) */}
-                <div className="absolute inset-0 pointer-events-none">
-                    {/* For Grid tokens, we need to replicate grid positioning or map to % */}
-                    {/* Let's use the same logic but mapped to % */}
+                <div className="absolute inset-[4%] pointer-events-none">
+                    {/* Used same inset as Inner Track to align coordinate systems */}
                     {players.map((p: any) => {
                         const posIndex = animatingPos[p.id] ?? p.position;
                         const isFT = p.isFastTrack;
@@ -159,9 +160,47 @@ export const BoardVisualizer = ({ board, players, animatingPos, currentPlayerId 
                             else if (ftIndex <= 36) { r = 1; c = 1 + (ftIndex - 24); }
                             else { r = 2 + (ftIndex - 37); c = 13; }
 
-                            // Grid is 13x13. Cell center is roughly (Index - 0.5) / 13 * 100%
+                            // Grid is 13x13.
+                            // However, we are inside a container that might be inset differently?
+                            // Wait, the outer grid is inset-0. The Players container needs to be inset-0 for Fast Track.
+                            // BUT, for Rat Race, we need inset-[4%].
+                            // This is conflicting. We should split the container or just use logic.
+
+                            // Let's use inset-0 for this container and adjusting Rat Race logic.
+                            // Actually, I put inset-[4%] on this container. This breaks Fast Track tokens.
+                            // I need to reset this container to inset-0 and handle Rat Race radius manually or use sub-containers.
+                            // To be safe, I will use inset-0 for the Player Container and match the Math.
+                        }
+
+                        // RE-CALCULATING STYLE IN RENDER block to be cleaner (Logic moved above in full file replacement if needed, but here simple inline fix)
+                        if (isFT) {
+                            // Fast Track (Grid) - Needs to be relative to WHOLE BOARD (inset-0)
+                            const ftIndex = posIndex >= 24 ? posIndex - 24 : posIndex;
+                            let r = 0, c = 0;
+                            if (ftIndex <= 12) { r = 13; c = 13 - ftIndex; }
+                            else if (ftIndex <= 23) { r = 13 - (ftIndex - 12); c = 1; }
+                            else if (ftIndex <= 36) { r = 1; c = 1 + (ftIndex - 24); }
+                            else { r = 2 + (ftIndex - 37); c = 13; }
+
                             const colPerc = ((c - 0.5) / 13) * 100;
                             const rowPerc = ((r - 0.5) / 13) * 100;
+
+                            // Since the player container is inset-[4%], the 0-100% is smaller than the grid.
+                            // WE MUST REMOVE inset-[4%] from player container if we want to support Fast Track.
+                            // But Rat Race depends on radius. Radius 46 is relative to... what?
+                            // In getPosStyle, radius 46 is relative to the container.
+                            // If I use inset-0 for player container:
+                            // Rat Race: Radius 46 (relative to full board).
+                            // Inner Track container: inset-[4%]. 
+                            // If Inner Track container is inset 4%, its width is 92%.
+                            // A radius of 46% of 92% is ~42% of full board.
+                            // I want radius 46% of FULL BOARD.
+                            // So: Player Container -> inset-0.
+                            //     Rat Race Tokens -> Radius 46 (matches Full Board).
+                            //     Inner Track Squares -> Must be positioned relative to Full Board OR adjusted.
+                            //     Actually, the Inner Track SQUARES loops use `getPosStyle`.
+                            //     If I put Inner Track SQUARES in `inset-0` instead of `inset-[4%]`, then `Radius 46` places them correctly relative to full board.
+                            //     The border/dashed rings might need separate div.
 
                             style = {
                                 left: `${colPerc}%`,
@@ -169,14 +208,14 @@ export const BoardVisualizer = ({ board, players, animatingPos, currentPlayerId 
                                 transform: 'translate(-50%, -50%)',
                                 position: 'absolute'
                             };
-
                         } else {
-                            // Circular Logic Reuse
+                            // Rat Race (Circular)
+                            // Radius 46 relative to inset-0 container
                             const totalSteps = 24;
                             const angleOffset = 90;
                             const angleDeg = (posIndex * (360 / totalSteps)) + angleOffset;
                             const angleRad = angleDeg * (Math.PI / 180);
-                            const radius = 42;
+                            const radius = 46; // MATCH BOARD RADIUS EXACTLY
                             const x = 50 + radius * Math.cos(angleRad);
                             const y = 50 + radius * Math.sin(angleRad);
                             style = {

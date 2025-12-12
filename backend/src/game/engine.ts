@@ -241,7 +241,17 @@ export class GameEngine {
         this.state.log.push(`${player.name} landed on ${square.type}`);
 
         if (square.type === 'PAYDAY') {
-            this.state.log.push(`Entered Payday! (Cashflow added on pass)`);
+            // Payday on landing (Indices 6, 12, 18...). Index 0 is usually handled by lap logic (newPos >= 24).
+            // To be safe and generous, we pay if it's NOT index 0, OR if we want to ensure payment.
+            // Given user feedback "stood on payday", we should pay.
+            // We'll skip index 0 if it was just covered by movePlayer, but handleSquare doesn't know previous state.
+            // Simplest fix: Pay if square.index !== 0. Index 0 is paid by "Passing Payday" log.
+            if (square.index !== 0) {
+                player.cash += player.cashflow;
+                this.state.log.push(`Checking Day! +$${player.cashflow}`);
+            } else {
+                this.state.log.push(`Entered Payday (Start)!`);
+            }
         } else if (square.type === 'MARKET' || square.type === 'DEAL') {
             // STOP AUTO-DRAW. Prompt for Small/Big Deal.
             this.state.phase = 'OPPORTUNITY_CHOICE';
