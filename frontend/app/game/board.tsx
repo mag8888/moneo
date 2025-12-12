@@ -126,6 +126,26 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
 
 
     // Duplicates removed - these are now handled via engineRef or were redefined at the top level
+
+    const handleLoan = (amount: number) => socket.emit('take_loan', { roomId, amount });
+    const handleRepay = (amount: number) => socket.emit('repay_loan', { roomId, amount });
+    const handleEndTurn = () => socket.emit('end_turn', { roomId });
+    // handleRoll and handleBuy are likely defined below or need to be checked.
+    // Wait, checking file... handleRoll and handleBuy were defined right after my previous deletion block?
+    // No, I deleted the entire block. And then I added handleRoll/handleBuy BACK in a subsequent edit in a DIFFERENT location?
+    // Let's check lines 59-67 from the previous `view_file`.
+    // Yes:
+    // 59:     const handleRoll = () => {
+    // 60:         socket.emit('roll_dice', { roomId });
+    // 61:         setHasRolled(true);
+    // 62:     };
+    // 63:
+    // 64:     const handleBuy = () => {
+    // 65:         socket.emit('buy_asset', { roomId });
+    // 66:     };
+
+    // So I only need to restore handleLoan, handleRepay, handleEndTurn.
+
     const currentPlayer = state.players[state.currentPlayerIndex];
     if (!currentPlayer) return <div>Loading...</div>; // Safety check
 
