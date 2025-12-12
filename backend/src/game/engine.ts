@@ -46,7 +46,7 @@ export interface PlayerState extends IPlayer {
 
 export interface BoardSquare {
     index: number;
-    type: 'DEAL' | 'MARKET' | 'EXPENSE' | 'PAYDAY' | 'BABY' | 'CHARITY' | 'DOWNSIZED' | 'DREAM' | 'BUSINESS' | 'LOSS';
+    type: 'DEAL' | 'MARKET' | 'EXPENSE' | 'PAYDAY' | 'BABY' | 'CHARITY' | 'DOWNSIZED' | 'DREAM' | 'BUSINESS' | 'LOSS' | 'STOCK_EXCHANGE';
     name: string;
     cost?: number;
     cashflow?: number;
@@ -82,57 +82,58 @@ export const RAT_RACE_SQUARES: BoardSquare[] = [
     { index: 23, type: 'MARKET', name: 'Market' },
 ];
 
+// 47 Items from User List (Mapped to Global Indices 24-70)
 export const FAST_TRACK_SQUARES: BoardSquare[] = [
-    // 1 (Index 24)
+    // 1 (24) Geld/Payday
     { index: 24, type: 'PAYDAY', name: 'CASHFLOW Day', description: 'Вам выплачивается доход от ваших инвестиций' },
-    // 2
+    // 2 (25) Dream
     { index: 25, type: 'DREAM', name: 'Дом мечты', cost: 100000, description: 'Построить дом мечты для семьи' },
-    // 3
+    // 3 (26) Business
     { index: 26, type: 'BUSINESS', name: 'Кофейня', cost: 100000, cashflow: 3000, description: 'Кофейня в центре города' },
-    // 4
-    { index: 27, type: 'LOSS', name: 'Аудит', action: 'AUDIT', description: 'Налоговая проверка. Вы теряете половину наличных.' },
-    // 5
-    { index: 28, type: 'BUSINESS', name: 'SPA Центр', cost: 270000, cashflow: 5000, description: 'Центр здоровья и спа' },
-    // 6
-    { index: 29, type: 'DREAM', name: 'Антарктида', cost: 150000, description: 'Посетить Антарктиду' },
-    // 7
-    { index: 30, type: 'BUSINESS', name: 'App Startup', cost: 420000, cashflow: 10000, description: 'Мобильное приложение (подписка)' },
-    // 8
-    { index: 31, type: 'CHARITY', name: 'Благотворительность', description: 'Благотворительный взнос' },
-    // 9
-    { index: 32, type: 'BUSINESS', name: 'Digital Agency', cost: 160000, cashflow: 4000, description: 'Агентство цифрового маркетинга' },
-    // 10
-    { index: 33, type: 'LOSS', name: 'Кража', action: 'THEFT', description: 'Кража. Вы теряете 100% наличных.' },
-    // 11
-    { index: 34, type: 'BUSINESS', name: 'Бутик-отель', cost: 200000, cashflow: 5000, description: 'Мини-отель/бутик-гостиница' },
-    // 12
+    // 4 (27) Loss (Audit)
+    { index: 27, type: 'LOSS', name: 'Аудит', description: 'Налоговая проверка. Вы теряете 50% наличных.', action: 'AUDIT' },
+    // 5 (28) Business
+    { index: 28, type: 'BUSINESS', name: 'Центр здоровья и спа', cost: 270000, cashflow: 5000 },
+    // 6 (29) Dream
+    { index: 29, type: 'DREAM', name: 'Посетить Антарктиду', cost: 150000 },
+    // 7 (30) Business
+    { index: 30, type: 'BUSINESS', name: 'Мобильное приложение', cost: 420000, cashflow: 10000, description: 'Сервис по подписке' },
+    // 8 (31) Charity
+    { index: 31, type: 'CHARITY', name: 'Благотворительность', description: 'Пожертвуйте 10% от общего дохода' },
+    // 9 (32) Business
+    { index: 32, type: 'BUSINESS', name: 'Агентство маркетинга', cost: 160000, cashflow: 4000, description: 'Агентство цифрового маркетинга' },
+    // 10 (33) Loss (Theft)
+    { index: 33, type: 'LOSS', name: 'Кража', description: 'Вас обокрали! Вы теряете 100% наличных.', action: 'THEFT' },
+    // 11 (34) Business
+    { index: 34, type: 'BUSINESS', name: 'Мини-отель', cost: 200000, cashflow: 5000, description: 'Бутик-гостиница' },
+    // 12 (35) Payday
     { index: 35, type: 'PAYDAY', name: 'CASHFLOW Day', description: 'Вам выплачивается доход от ваших инвестиций' },
-    // 13
+    // 13 (36) Business
     { index: 36, type: 'BUSINESS', name: 'Ресторан', cost: 320000, cashflow: 8000, description: 'Франшиза популярного ресторана' },
-    // 14
-    { index: 37, type: 'DREAM', name: '7 Вершин', cost: 500000, description: 'Подняться на все высочайшие вершины мира' },
-    // 15
-    { index: 38, type: 'BUSINESS', name: 'Бутик-отель', cost: 200000, cashflow: 4000, description: 'Мини-отель/бутик-гостиница' },
-    // 16
-    { index: 39, type: 'DREAM', name: 'Бестселлер', cost: 300000, description: 'Стать автором книги-бестселлера' },
-    // 17
+    // 14 (37) Dream
+    { index: 37, type: 'DREAM', name: 'Высочайшие вершины', cost: 500000, description: 'Подняться на все высочайшие вершины мира' },
+    // 15 (38) Business
+    { index: 38, type: 'BUSINESS', name: 'Мини-отель', cost: 200000, cashflow: 4000, description: 'Бутик-гостиница' },
+    // 16 (39) Dream
+    { index: 39, type: 'DREAM', name: 'Автор бестселлера', cost: 300000, description: 'Стать автором книги-бестселлера' },
+    // 17 (40) Business
     { index: 40, type: 'BUSINESS', name: 'Йога-центр', cost: 170000, cashflow: 4500, description: 'Йога- и медитационный центр' },
-    // 18
-    { index: 41, type: 'LOSS', name: 'Развод', action: 'DIVORCE', description: 'Развод. Вы теряете половину наличных.' },
-    // 19
+    // 18 (41) Loss (Divorce)
+    { index: 41, type: 'LOSS', name: 'Развод', description: 'Раздел имущества. Вы теряете 50% наличных.', action: 'DIVORCE' },
+    // 19 (42) Business
     { index: 42, type: 'BUSINESS', name: 'Автомойки', cost: 120000, cashflow: 3000, description: 'Сеть автомоек самообслуживания' },
-    // 20
-    { index: 43, type: 'DREAM', name: 'Яхта (Средиземное)', cost: 300000, description: 'Жить год на яхте в Средиземном море' },
-    // 21
-    { index: 44, type: 'BUSINESS', name: 'Салон красоты', cost: 500000, cashflow: 15000, description: 'Салон красоты/барбершоп' },
-    // 22
-    { index: 45, type: 'DREAM', name: 'Фестиваль', cost: 200000, description: 'Организовать мировой фестиваль' },
-    // 23
+    // 20 (43) Dream
+    { index: 43, type: 'DREAM', name: 'Яхта в Средиземном', cost: 300000, description: 'Жить год на яхте в Средиземном море' },
+    // 21 (44) Business
+    { index: 44, type: 'BUSINESS', name: 'Салон красоты', cost: 500000, cashflow: 15000, description: 'Салон красоты / Барбершоп' },
+    // 22 (45) Dream
+    { index: 45, type: 'DREAM', name: 'Мировой фестиваль', cost: 200000, description: 'Организовать мировой фестиваль' },
+    // 23 (46) Payday
     { index: 46, type: 'PAYDAY', name: 'CASHFLOW Day', description: 'Вам выплачивается доход от ваших инвестиций' },
     // 24
-    { index: 47, type: 'BUSINESS', name: 'Интернет-магазин', cost: 110000, cashflow: 3000, description: 'Онлайн-магазин одежды' },
+    { index: 47, type: 'BUSINESS', name: 'Онлайн-магазин', cost: 110000, cashflow: 3000, description: 'Онлайн-магазин одежды' },
     // 25
-    { index: 48, type: 'LOSS', name: 'Пожар', action: 'FIRE', description: 'Пожар. Вы теряете бизнес с минимальным доходом.' },
+    { index: 48, type: 'LOSS', name: 'Пожар', description: 'Вы теряете бизнес с минимальным доходом.', action: 'FIRE' },
     // 26
     { index: 49, type: 'DREAM', name: 'Ретрит-центр', cost: 500000, description: 'Построить ретрит-центр' },
     // 27
@@ -142,42 +143,42 @@ export const FAST_TRACK_SQUARES: BoardSquare[] = [
     // 29
     { index: 52, type: 'BUSINESS', name: 'Эко-ранчо', cost: 1000000, cashflow: 20000, description: 'Туристический комплекс (эко-ранчо)' },
     // 30
-    { index: 53, type: 'DREAM', name: 'Кругосветка', cost: 300000, description: 'Кругосветное плавание на паруснике' },
+    { index: 53, type: 'DREAM', name: 'Кругосветка (Люкс)', cost: 300000, description: 'Кругосветное плавание на паруснике (Premium)' },
     // 31
-    { index: 54, type: 'BUSINESS', name: 'IPO Биржа', cost: 50000, cashflow: 500000, description: 'Биржа (Шанс выплаты 500к)' }, // Logic needs dice roll support? Assuming direct cashflow for now or special logi. User said "If 5 or 6". I'll mark it BUSINESS for now.
+    { index: 54, type: 'STOCK_EXCHANGE', name: 'Биржа', description: 'Бросьте кубик. Если выпадет 5 или 6, вы получите $500,000.' },
     // 32
-    { index: 55, type: 'DREAM', name: 'Частный самолет', cost: 1000000, description: 'Купить частный самолёт' },
+    { index: 55, type: 'DREAM', name: 'Частный самолёт', cost: 1000000, description: 'Купить частный самолёт' },
     // 33
-    { index: 56, type: 'BUSINESS', name: 'NFT Платформа', cost: 400000, cashflow: 12000, description: 'NFT-платформа' },
+    { index: 56, type: 'BUSINESS', name: 'NFT-платформа', cost: 400000, cashflow: 12000 },
     // 34
     { index: 57, type: 'PAYDAY', name: 'CASHFLOW Day', description: 'Вам выплачивается доход от ваших инвестиций' },
     // 35
     { index: 58, type: 'BUSINESS', name: 'Школа языков', cost: 20000, cashflow: 3000, description: 'Школа иностранных языков' },
     // 36
-    { index: 59, type: 'DREAM', name: 'Суперкары', cost: 1000000, description: 'Купить коллекцию суперкаров' },
+    { index: 59, type: 'DREAM', name: 'Коллекция суперкаров', cost: 1000000 },
     // 37
     { index: 60, type: 'BUSINESS', name: 'Школа будущего', cost: 300000, cashflow: 10000, description: 'Создать школу будущего для детей' },
     // 38
     { index: 61, type: 'DREAM', name: 'Снять фильм', cost: 500000, description: 'Снять полнометражный фильм' },
     // 39
-    { index: 62, type: 'LOSS', name: 'Рейдерство', action: 'RAID', description: 'Рейдерский захват. Вы теряете бизнес с крупным доходом.' },
+    { index: 62, type: 'LOSS', name: 'Рейдерский захват', description: 'Вы теряете бизнес с самым крупным доходом.', action: 'RAID' },
     // 40
     { index: 63, type: 'DREAM', name: 'Лидер мнений', cost: 1000000, description: 'Стать мировым лидером мнений' },
     // 41
     { index: 64, type: 'BUSINESS', name: 'Автомойки', cost: 120000, cashflow: 3500, description: 'Сеть автомоек самообслуживания' },
     // 42
-    { index: 65, type: 'DREAM', name: 'Яхта', cost: 300000, description: 'Белоснежная Яхта' },
+    { index: 65, type: 'DREAM', name: 'Белоснежная Яхта', cost: 300000 },
     // 43
-    { index: 66, type: 'BUSINESS', name: 'Франшиза', cost: 100000, cashflow: 10000, description: 'Франшиза "поток денег"' },
+    { index: 66, type: 'BUSINESS', name: 'Франшиза', cost: 100000, cashflow: 10000, description: 'Франшиза "Поток денег"' },
     // 44
-    { index: 67, type: 'DREAM', name: 'Космос', cost: 250000, description: 'Полёт в космос' },
+    { index: 67, type: 'DREAM', name: 'Полёт в космос', cost: 250000 },
     // 45
     { index: 68, type: 'BUSINESS', name: 'Пекарня', cost: 300000, cashflow: 7000, description: 'Пекарня с доставкой' },
     // 46
-    { index: 69, type: 'DREAM', name: 'Фонд', cost: 200000, description: 'Организовать благотворительный фонд' },
+    { index: 69, type: 'DREAM', name: 'Благотворительный фонд', cost: 200000, description: 'Организовать благотворительный фонд' },
     // 47
-    { index: 70, type: 'BUSINESS', name: 'EdTech', cost: 200000, cashflow: 5000, description: 'Онлайн-образовательная платформа' },
-    // 48 (Padding to complete loop)
+    { index: 70, type: 'BUSINESS', name: 'Образовательная платформа', cost: 200000, cashflow: 5000, description: 'Онлайн-образовательная платформа' },
+    // 48 (Padding to complete loop - Index 71)
     { index: 71, type: 'PAYDAY', name: 'CASHFLOW Day', description: 'Вам выплачивается доход от ваших инвестиций' }
 ];
 
@@ -279,7 +280,7 @@ export class GameEngine {
     movePlayer(steps: number) {
         const player = this.state.players[this.state.currentPlayerIndex];
         const oldPos = player.position;
-        const trackLength = player.isFastTrack ? 48 : 24;
+        const trackLength = player.isFastTrack ? 47 : 24;
 
         let currentPos = oldPos;
 
@@ -416,6 +417,16 @@ export class GameEngine {
                 if (player.cash >= donation) {
                     player.cash -= donation;
                     this.state.log.push(`❤️ Donated $${donation} to Charity.`);
+                }
+                break;
+
+            case 'STOCK_EXCHANGE':
+                const roll = Math.floor(Math.random() * 6) + 1;
+                if (roll >= 5) {
+                    player.cash += 500000;
+                    this.state.log.push(`📈 Stock Exchange: Rolled ${roll}. WON $500,000!`);
+                } else {
+                    this.state.log.push(`📉 Stock Exchange: Rolled ${roll}. No profit.`);
                 }
                 break;
         }

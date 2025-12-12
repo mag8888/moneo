@@ -2,26 +2,38 @@ import React from 'react';
 
 // Sticker Mapping
 const getSticker = (type: string, name: string) => {
+    if (type === 'STOCK_EXCHANGE') return '📈';
     if (type === 'PAYDAY') return '💰';
     if (type === 'CASHFLOW') return '💸';
-    if (type === 'DEAL' || type === 'OPPORTUNITY') return '💼'; // Briefcase for Opportunity
+    if (type === 'DEAL' || type === 'OPPORTUNITY') return '💼';
     if (type === 'MARKET') return '🏪';
     if (type === 'EXPENSE' || type === 'DOODAD') return '🛍️';
     if (type === 'CHARITY') return '❤️';
     if (type === 'BABY') return '👶';
-    if (type === 'BABY') return '👶';
-    if (type === 'DOWNSIZED' || type === 'LOSS') return '📉'; // Loss/Downsized
-    if (type === 'BUSINESS') return '🏢'; // Business
-    if (type === 'DREAM') return '✨'; // Dream
+
+    // Detailed Loss Mapping
+    if (type === 'LOSS') {
+        if (name.includes('Аудит')) return '👮';
+        if (name.includes('Кража')) return '🕵️';
+        if (name.includes('Развод')) return '💔';
+        if (name.includes('Пожар')) return '🔥';
+        if (name.includes('Рейдер')) return '🏴‍☠️';
+        return '📉';
+    }
+
+    if (type === 'DOWNSIZED') return '📉';
+    if (type === 'BUSINESS') return '🏢';
+    if (type === 'DREAM') return '✨';
     return '⬜';
 };
 
 const getGradient = (type: string, isFT: boolean) => {
     if (isFT) {
-        if (type === 'CASHFLOW' || type === 'PAYDAY') return 'bg-gradient-to-br from-emerald-900 to-emerald-950 border-emerald-600/50';
-        if (type === 'BUSINESS') return 'bg-gradient-to-br from-blue-900 to-blue-950 border-blue-500/50';
-        if (type === 'DREAM') return 'bg-gradient-to-br from-fuchsia-900 to-purple-950 border-fuchsia-500/50';
-        if (type === 'LOSS') return 'bg-gradient-to-br from-red-900 to-red-950 border-red-500/50';
+        if (type === 'CASHFLOW' || type === 'PAYDAY') return 'bg-gradient-to-br from-emerald-900 to-emerald-950 border-emerald-600/50 shadow-[0_0_15px_rgba(16,185,129,0.3)]';
+        if (type === 'BUSINESS') return 'bg-gradient-to-br from-blue-900 to-blue-950 border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.3)]';
+        if (type === 'DREAM') return 'bg-gradient-to-br from-fuchsia-900 to-purple-950 border-fuchsia-500/50 shadow-[0_0_15px_rgba(217,70,239,0.3)]';
+        if (type === 'LOSS') return 'bg-gradient-to-br from-red-900 to-red-950 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.3)]';
+        if (type === 'STOCK_EXCHANGE') return 'bg-gradient-to-br from-indigo-900 to-indigo-950 border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.3)]';
         return 'bg-gradient-to-br from-slate-900 to-slate-950 border-amber-900/30';
     }
     // RAT RACE COLORS
@@ -151,7 +163,7 @@ export const BoardVisualizer = ({ board, players, animatingPos, currentPlayerId 
                 </div>
 
                 {/* 3. PLAYER TOKENS (ABSOLUTE OVERLAY) */}
-                <div className="absolute inset-[12%] pointer-events-none">
+                <div className="absolute inset-0 pointer-events-none">
                     {/* Used same inset as Inner Track to align coordinate systems */}
                     {players.map((p: any) => {
                         const posIndex = animatingPos[p.id] ?? p.position;
@@ -223,7 +235,7 @@ export const BoardVisualizer = ({ board, players, animatingPos, currentPlayerId 
                             const angleOffset = 90;
                             const angleDeg = (posIndex * (360 / totalSteps)) + angleOffset;
                             const angleRad = angleDeg * (Math.PI / 180);
-                            const radius = 46; // MATCH BOARD RADIUS EXACTLY
+                            const radius = 35; // Adjusted for inset-0 container (46 * 0.76)
                             const x = 50 + radius * Math.cos(angleRad);
                             const y = 50 + radius * Math.sin(angleRad);
                             style = {
