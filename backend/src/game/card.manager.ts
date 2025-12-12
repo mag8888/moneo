@@ -83,45 +83,13 @@ export class CardManager {
     }
 
     drawMarket(): Card {
-        {
-            id: 'm4', type: 'MARKET', title: 'Gold Coins', description: 'Krugerrands per ounce.',
-                cost: 1000, roi: 0
-        },
-        // Real Estate (Big Deals)
-        {
-            id: 'm5', type: 'MARKET', title: '4-Plex Apartment', description: 'Steady cashflow machine.',
-                cost: 120000, downPayment: 12000, cashflow: 800, roi: 80
-        },
-        {
-            id: 'm6', type: 'MARKET', title: 'Car Wash', description: 'Automated car wash business.',
-                cost: 150000, downPayment: 30000, cashflow: 2500, roi: 100
-        },
-        {
-            id: 'm7', type: 'MARKET', title: '8-Unit Building', description: 'Fully occupied. Good management.',
-                cost: 240000, downPayment: 40000, cashflow: 1800, roi: 54
-        },
-        {
-            id: 'm8', type: 'MARKET', title: 'Shopping Mall Share', description: 'Limited partnership in a mall.',
-                cost: 20000, downPayment: 20000, cashflow: 1000, roi: 60
-        },
-        // More Stocks
-        {
-            id: 'm9', type: 'MARKET', title: 'Stock: OK4U', description: 'Drug company. FDA approval pending.',
-                cost: 20, symbol: 'OK4U', roi: 0
-        },
-        {
-            id: 'm10', type: 'MARKET', title: 'Stock: ON2U', description: 'Entertainment giant. Split rumor.',
-                cost: 30, symbol: 'ON2U', roi: 0
-        }
-            ];
-    }
-    const card = this.marketDeck.shift();
-        return card!;
+        // Fallback: Randomly pick one
+        return Math.random() > 0.5 ? this.drawSmallDeal() : this.drawBigDeal();
     }
 
-drawExpense(): Card {
-    if (this.expenseDeck.length === 0) this.expenseDeck = [...EXPENSE_CARDS];
-    const card = this.expenseDeck.shift();
-    return card!;
-}
+    drawExpense(): Card {
+        if (this.expenseDeck.length === 0) this.expenseDeck = [...EXPENSE_CARDS];
+        const card = this.expenseDeck.shift();
+        return card!;
+    }
 }
