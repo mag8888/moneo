@@ -34,8 +34,141 @@ export class GameGateway {
 
     initEvents() {
         this.io.on('connection', (socket: Socket) => {
-            // ... (existing connection logic)
-            // ...
+            console.log('Client connected:', socket.id);
+
+            // Get available rooms
+            socket.on('get_rooms', async (callback) => {
+                const rooms = await this.roomService.getRooms();
+                callback(rooms);
+            });
+
+            // Create Room
+            socket.on('create_room', async (data, callback) => {
+                try {
+                    const { name, maxPlayers, timer, password, playerName, userId } = data; // Expect userId
+                    const room = await this.roomService.createRoom(
+                        socket.id,
+                        userId || 'guest_' + socket.id, // Fallback
+                        playerName || 'Player',
+                        name,
+                        maxPlayers,
+                        timer,
+                        password
+                    );
+                    socket.join(room.id);
+                    const rooms = await this.roomService.getRooms();
+                    this.io.emit('rooms_updated', rooms); // Broadcast update
+                    callback({ success: true, room });
+                } catch (e: any) {
+                    callback({ success: false, error: e.message });
+                }
+            });
+
+            // Join Room
+            socket.on('join_room', async (data, callback) => {
+                try {
+                    const { roomId, password, playerName, userId } = data; // Expect userId
+                    const room = await this.roomService.joinRoom(
+                        roomId,
+                        socket.id,
+                        userId || 'guest_' + socket.id,
+                        playerName || 'Player',
+                        password
+                    );
+                    socket.join(roomId);
+
+                    // Sync Active Game Engine if exists
+                    const game = this.games.get(roomId);
+                    if (game) {
+                        game.updatePlayerId(userId, socket.id);
+                        // Re-emit game start to ensure client has latest state with correct ID
+                        this.io.to(roomId).emit('game_started', { roomId, state: game.getState() });
+                    }
+
+                    this.io.to(roomId).emit('room_state_updated', room);
+
+                    const rooms = await this.roomService.getRooms();
+                    this.io.emit('rooms_updated', rooms);
+                    callback({ success: true, room });
+                } catch (e: any) {
+                    callback({ success: false, error: e.message });
+                }
+            });
+
+            // Leave Room
+            socket.on('leave_room', async (data) => {
+                const { roomId } = data;
+                await this.roomService.leaveRoom(roomId, socket.id);
+                socket.leave(roomId);
+                const room = await this.roomService.getRoom(roomId);
+                if (room) {
+                    this.io.to(roomId).emit('room_state_updated', room);
+                }
+                const rooms = await this.roomService.getRooms();
+                this.io.emit('rooms_updated', rooms);
+            });
+
+            // Kick Player
+            socket.on('kick_player', async (data, callback) => {
+                try {
+                    const { roomId, playerId, userId } = data; // Expect userId
+                    await this.roomService.kickPlayer(roomId, userId, playerId);
+
+                    // Notify the kicked player
+                    this.io.to(roomId).emit('player_kicked', { playerId });
+
+                    const room = await this.roomService.getRoom(roomId);
+                    if (room) {
+                        this.io.to(roomId).emit('room_state_updated', room);
+                    }
+                    const rooms = await this.roomService.getRooms();
+                    this.io.emit('rooms_updated', rooms);
+
+                    callback({ success: true });
+                } catch (e: any) {
+                    callback({ success: false, error: e.message });
+                }
+            });
+
+            // Player Ready
+            socket.on('player_ready', async (data, callback) => {
+                try {
+                    const { roomId, isReady, dream, token, userId } = data; // Expect userId
+                    const room = await this.roomService.setPlayerReady(
+                        roomId,
+                        socket.id,
+                        userId, // Pass userId for JIT check
+                        isReady,
+                        dream,
+                        token
+                    );
+                    this.io.to(roomId).emit('room_state_updated', room);
+                    callback({ success: true });
+                } catch (e: any) {
+                    callback({ success: false, error: e.message });
+                }
+            });
+
+            // Start Game
+            socket.on('start_game', async (data) => {
+                const { roomId, userId } = data;
+                try {
+                    // Service now handles auth via userId
+                    await this.roomService.startGame(roomId, userId);
+
+                    // Init Engine (need fresh room data)
+                    const room = await this.roomService.getRoom(roomId);
+                    const engine = new GameEngine(roomId, room.players);
+                    this.games.set(roomId, engine);
+
+                    this.io.to(roomId).emit('game_started', { roomId, state: engine.getState() });
+
+                    const rooms = await this.roomService.getRooms();
+                    this.io.emit('rooms_updated', rooms);
+                } catch (e) {
+                    console.error("Start game failed:", e);
+                }
+            });
 
             // Game Actions - Helper to save state
             const saveState = (roomId: string, game: GameEngine) => {
