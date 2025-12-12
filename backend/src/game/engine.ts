@@ -88,7 +88,8 @@ export class GameEngine {
             phase: 'ROLL',
             board: FULL_BOARD,
             log: ['Game Started'],
-            transactions: []
+            transactions: [],
+            turnExpiresAt: Date.now() + 120000 // Init first turn timer
         };
     }
 

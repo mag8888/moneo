@@ -32,7 +32,23 @@ export class GameGateway {
         }
     }
 
+    private saveState(roomId: string, game: GameEngine) {
+        this.roomService.saveGameState(roomId, game.getState()).catch(err => console.error("Persist Error:", err));
+    }
+
     initEvents() {
+        // Game Loop for Timers (Every 1s)
+        setInterval(() => {
+            this.games.forEach((game, roomId) => {
+                const changed = game.checkTurnTimeout();
+                if (changed) {
+                    this.io.to(roomId).emit('turn_ended', { state: game.getState() });
+                    // Also persist state
+                    this.saveState(roomId, game);
+                }
+            });
+        }, 1000);
+
         this.io.on('connection', (socket: Socket) => {
             console.log('Client connected:', socket.id);
 
