@@ -1,7 +1,9 @@
+```
 "use client";
 
 import { useEffect, useState } from 'react';
 import { socket } from '../socket';
+import confetti from 'canvas-confetti';
 import { BoardVisualizer } from './BoardVisualizer';
 
 interface BoardProps {
@@ -200,7 +202,7 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
     const formatTime = (seconds: number) => {
         const m = Math.floor(seconds / 60);
         const s = seconds % 60;
-        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        return `${ m.toString().padStart(2, '0') }:${ s.toString().padStart(2, '0') } `;
     };
 
     return (
@@ -284,7 +286,7 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                         </h3>
                         <div className="space-y-2">
                             {state.players.map((p: any) => (
-                                <div key={p.id} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${p.id === currentPlayer.id ? 'bg-slate-800/80 border-blue-500/50 shadow-lg shadow-blue-900/10' : 'bg-slate-900/30 border-slate-800/50'}`}>
+                                <div key={p.id} className={`flex items - center gap - 3 p - 3 rounded - xl border transition - all ${ p.id === currentPlayer.id ? 'bg-slate-800/80 border-blue-500/50 shadow-lg shadow-blue-900/10' : 'bg-slate-900/30 border-slate-800/50' } `}>
                                     <div className="text-lg bg-slate-950 w-8 h-8 flex items-center justify-center rounded-xl border border-slate-800 shadow-inner">{p.token}</div>
                                     <div className="flex-1 min-w-0">
                                         <div className="text-sm font-bold text-slate-200 truncate">{p.name}</div>
@@ -428,7 +430,7 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                         </div>
                         <div className="text-center">
                             <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Turn</div>
-                            <div className={`text-sm font-mono font-bold ${timeLeft < 15 ? 'text-red-500 animate-pulse' : 'text-blue-400'}`}>
+                            <div className={`text - sm font - mono font - bold ${ timeLeft < 15 ? 'text-red-500 animate-pulse' : 'text-blue-400' } `}>
                                 {formatTime(timeLeft)}
                             </div>
                         </div>
@@ -528,7 +530,7 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                             <div className="text-[10px] text-slate-500 uppercase tracking-[0.2em] font-bold mb-1">Ход игрока</div>
                             <div className="text-lg font-bold text-white tracking-wide">{currentPlayer.name}</div>
                         </div>
-                        <div className={`text-4xl font-mono font-black tracking-tight ${timeLeft < 15 ? 'text-red-500 animate-pulse drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'text-slate-200'}`}>
+                        <div className={`text - 4xl font - mono font - black tracking - tight ${ timeLeft < 15 ? 'text-red-500 animate-pulse drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'text-slate-200' } `}>
                             {formatTime(timeLeft)}
                         </div>
                     </div>
@@ -543,10 +545,12 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                             <button
                                 onClick={handleRoll}
                                 disabled={!isMyTurn || state.phase !== 'ROLL' || !!state.currentCard || hasRolled}
-                                className={`p-4 rounded-xl border flex flex-col items-center gap-2 group transition-all duration-200
-                                ${isMyTurn && state.phase === 'ROLL' && !state.currentCard && !hasRolled
-                                        ? 'bg-gradient-to-b from-green-600 to-green-700 border-green-500 text-white shadow-xl shadow-green-900/40 hover:scale-[1.02] hover:shadow-green-900/60 cursor-pointer'
-                                        : 'bg-slate-800/50 border-slate-700 text-slate-500 opacity-50 cursor-not-allowed'}`}
+                                className={`p - 4 rounded - xl border flex flex - col items - center gap - 2 group transition - all duration - 200
+                                ${
+    isMyTurn && state.phase === 'ROLL' && !state.currentCard && !hasRolled
+    ? 'bg-gradient-to-b from-green-600 to-green-700 border-green-500 text-white shadow-xl shadow-green-900/40 hover:scale-[1.02] hover:shadow-green-900/60 cursor-pointer'
+    : 'bg-slate-800/50 border-slate-700 text-slate-500 opacity-50 cursor-not-allowed'
+} `}
                             >
                                 <span className="text-2xl filter drop-shadow-md group-hover:rotate-12 transition-transform duration-300">🎲</span>
                                 <span className="text-[9px] font-black uppercase tracking-widest">Бросок</span>
@@ -554,10 +558,12 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                             <button
                                 onClick={handleEndTurn}
                                 disabled={!isMyTurn || (state.phase === 'ROLL' && !state.currentCard && !hasRolled)}
-                                className={`p-4 rounded-xl border flex flex-col items-center gap-2 group transition-all duration-200
-                                ${isMyTurn && (state.phase !== 'ROLL' || !!state.currentCard || hasRolled)
-                                        ? 'bg-gradient-to-b from-blue-600 to-blue-700 border-blue-500 text-white shadow-xl shadow-blue-900/40 hover:scale-[1.02] hover:shadow-blue-900/60 cursor-pointer'
-                                        : 'bg-slate-800/50 border-slate-700 text-slate-500 opacity-50 cursor-not-allowed'}`}
+                                className={`p - 4 rounded - xl border flex flex - col items - center gap - 2 group transition - all duration - 200
+                                ${
+    isMyTurn && (state.phase !== 'ROLL' || !!state.currentCard || hasRolled)
+    ? 'bg-gradient-to-b from-blue-600 to-blue-700 border-blue-500 text-white shadow-xl shadow-blue-900/40 hover:scale-[1.02] hover:shadow-blue-900/60 cursor-pointer'
+    : 'bg-slate-800/50 border-slate-700 text-slate-500 opacity-50 cursor-not-allowed'
+} `}
                             >
                                 <span className="text-2xl filter drop-shadow-md group-hover:translate-x-1 transition-transform duration-300">➡</span>
                                 <span className="text-[9px] font-black uppercase tracking-widest">Далее</span>
@@ -576,7 +582,7 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                         </h3>
                         <div className="space-y-2">
                             {state.players.map((p: any) => (
-                                <div key={p.id} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${p.id === currentPlayer.id ? 'bg-slate-800/80 border-blue-500/50 shadow-lg shadow-blue-900/10 scale-[1.02]' : 'bg-slate-900/30 border-slate-800/50'}`}>
+                                <div key={p.id} className={`flex items - center gap - 3 p - 3 rounded - xl border transition - all ${ p.id === currentPlayer.id ? 'bg-slate-800/80 border-blue-500/50 shadow-lg shadow-blue-900/10 scale-[1.02]' : 'bg-slate-900/30 border-slate-800/50' } `}>
                                     <div className="text-lg bg-slate-950 w-8 h-8 flex items-center justify-center rounded-xl border border-slate-800 shadow-inner">{p.token}</div>
                                     <div className="flex-1 min-w-0">
                                         <div className="text-sm font-bold text-slate-200 truncate">{p.name}</div>
@@ -604,6 +610,21 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
             </div>
             {/* End Main Grid */}
 
+            {/* BABY NOTIFICATION OVERLAY */}
+            {babyNotification && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none">
+                     <div className="bg-white/10 backdrop-blur-md border border-white/20 p-8 rounded-3xl shadow-2xl animate-in zoom-in-50 duration-500 flex flex-col items-center gap-4">
+                        <div className="text-6xl animate-bounce">👶</div>
+                        <div className="text-3xl font-black text-white text-center drop-shadow-lg leading-tight">
+                            {babyNotification}
+                        </div>
+                        <div className="text-white/80 text-xl font-bold bg-green-500/20 px-4 py-2 rounded-xl mt-2 border border-green-500/50">
+                            +$5,000 Подарок!
+                        </div>
+                     </div>
+                </div>
+            )}
+
             {/* BOTTOM NAV MOBILE */}
             < div className="lg:hidden bg-[#0B0E14] border-t border-slate-800 p-2 pb-6 z-50" >
                 <div className="max-w-md mx-auto flex justify-between items-center gap-2">
@@ -614,16 +635,16 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                     <button
                         onClick={handleRoll}
                         disabled={!isMyTurn || state.phase !== 'ROLL' || !!state.currentCard}
-                        className={`flex-1 h-14 rounded-xl flex items-center justify-center gap-2 font-bold text-xs uppercase
-                              ${isMyTurn && state.phase === 'ROLL' && !state.currentCard ? 'bg-green-600 text-white' : 'bg-slate-800 text-slate-500 opacity-50'}`}
+                        className={`flex - 1 h - 14 rounded - xl flex items - center justify - center gap - 2 font - bold text - xs uppercase
+                              ${ isMyTurn && state.phase === 'ROLL' && !state.currentCard ? 'bg-green-600 text-white' : 'bg-slate-800 text-slate-500 opacity-50' } `}
                     >
                         <span>🎲</span> ROLL
                     </button>
                     <button
                         onClick={handleEndTurn}
                         disabled={!isMyTurn || (state.phase === 'ROLL' && !state.currentCard)}
-                        className={`flex-1 h-14 rounded-xl flex items-center justify-center gap-2 font-bold text-xs uppercase
-                              ${isMyTurn && (state.phase !== 'ROLL' || !!state.currentCard) ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-500 opacity-50'}`}
+                        className={`flex - 1 h - 14 rounded - xl flex items - center justify - center gap - 2 font - bold text - xs uppercase
+                              ${ isMyTurn && (state.phase !== 'ROLL' || !!state.currentCard) ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-500 opacity-50' } `}
                     >
                         <span>➡</span> NEXT
                     </button>

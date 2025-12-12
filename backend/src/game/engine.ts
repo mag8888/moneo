@@ -14,6 +14,7 @@ export interface GameState {
     winner?: string;
     transactions: Transaction[];
     turnExpiresAt?: number;
+    lastEvent?: { type: string, payload?: any };
 }
 
 export interface Transaction {
@@ -53,7 +54,7 @@ export interface BoardSquare {
 // Mock Board Configuration (Rat Race - 24 Squares)
 export const RAT_RACE_SQUARES: BoardSquare[] = Array.from({ length: 24 }, (_, i) => {
     let type: BoardSquare['type'] = 'DEAL'; // Default
-    if (i % 6 === 0) type = 'PAYDAY';
+    if ([6, 14, 22].includes(i)) type = 'PAYDAY';
     else if ([2, 10, 18].includes(i)) type = 'EXPENSE';
     else if ([7, 15, 23].includes(i)) type = 'MARKET';
     else if (i === 12) type = 'BABY';
@@ -275,6 +276,7 @@ export class GameEngine {
                     player.cash += 5000;
 
                     this.state.log.push(`👶 Baby Born! (Roll: ${roll}). +$5000 Gift. Expenses +$${player.childCost}/mo`);
+                    this.state.lastEvent = { type: 'BABY_BORN', payload: { player: player.name } };
                 } else {
                     this.state.log.push(`No Baby (Roll: ${roll}).`);
                 }
@@ -329,11 +331,17 @@ export class GameEngine {
     resolveOpportunity(size: 'SMALL' | 'BIG') {
         const player = this.state.players[this.state.currentPlayerIndex];
 
-        let card: Card;
+        let card: Card | undefined;
         if (size === 'SMALL') {
             card = this.cardManager.drawSmallDeal();
         } else {
             card = this.cardManager.drawBigDeal();
+        }
+
+        if (!card) {
+            this.state.log.push(`${player.name} wanted ${size} deal, but deck is empty!`);
+            this.state.phase = 'ACTION';
+            return;
         }
 
         this.state.currentCard = card;
@@ -414,6 +422,10 @@ export class GameEngine {
         }
 
         this.state.log.push(`${player.name} bought ${card.title}. Passive Income +$${card.cashflow || 0}`);
+
+        // Clear card so it isn't discarded in endTurn
+        this.state.currentCard = undefined;
+
         this.checkFastTrackCondition(player);
         this.endTurn();
     }
@@ -466,7 +478,15 @@ export class GameEngine {
     }
 
     endTurn() {
-        this.state.currentCard = undefined; // Clear card
+        // Discard current card if it exists (was not bought)
+        if (this.state.currentCard) {
+            this.cardManager.discard(this.state.currentCard);
+            this.state.currentCard = undefined;
+        }
+
+        // Clear events
+        this.state.lastEvent = undefined;
+
         this.state.currentPlayerIndex = (this.state.currentPlayerIndex + 1) % this.state.players.length;
         this.state.phase = 'ROLL';
         this.state.currentTurnTime = 120;

@@ -67,23 +67,50 @@ export class CardManager {
             cost: 20000, downPayment: 20000, cashflow: 1000, roi: 60
         }
     ];
+    private smallDealsDiscard: Card[] = [];
+    private bigDealsDiscard: Card[] = [];
+
     expenseDeck: Card[] = [...EXPENSE_CARDS];
 
-    drawSmallDeal(): Card {
-        // Simple shuffle-like behavior: move to end
-        const card = this.smallDeals.shift();
-        if (card) this.smallDeals.push(card);
-        return card!;
+    drawSmallDeal(): Card | undefined {
+        if (this.smallDeals.length === 0) {
+            if (this.smallDealsDiscard.length === 0) return undefined; // No cards left
+            // Reshuffle
+            this.smallDeals = this.shuffle([...this.smallDealsDiscard]);
+            this.smallDealsDiscard = [];
+        }
+        return this.smallDeals.shift();
     }
 
-    drawBigDeal(): Card {
-        const card = this.bigDeals.shift();
-        if (card) this.bigDeals.push(card);
-        return card!;
+    drawBigDeal(): Card | undefined {
+        if (this.bigDeals.length === 0) {
+            if (this.bigDealsDiscard.length === 0) return undefined;
+            // Reshuffle
+            this.bigDeals = this.shuffle([...this.bigDealsDiscard]);
+            this.bigDealsDiscard = [];
+        }
+        return this.bigDeals.shift();
     }
 
-    drawMarket(): Card {
-        // Fallback: Randomly pick one
+    discard(card: Card) {
+        if (card.type === 'DEAL_SMALL') {
+            this.smallDealsDiscard.push(card);
+        } else if (card.type === 'DEAL_BIG') {
+            this.bigDealsDiscard.push(card);
+        } else if (card.type === 'EXPENSE') {
+            this.expenseDeck.push(card); // Expenses just go back? Or separate discard? User said "cards from discard shuffle". Expenses usually cycle. I'll cycle them.
+        }
+    }
+
+    private shuffle(array: Card[]): Card[] {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    drawMarket(): Card | undefined {
         return Math.random() > 0.5 ? this.drawSmallDeal() : this.drawBigDeal();
     }
 
