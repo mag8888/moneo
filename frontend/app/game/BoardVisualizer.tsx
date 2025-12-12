@@ -5,7 +5,7 @@ const getSticker = (type: string, name: string) => {
     if (type === 'PAYDAY') return '💰';
     if (type === 'CASHFLOW') return '💸';
     if (type === 'OPPORTUNITY') return '⚡';
-    if (type === 'MARKET') return '🏠'; // Or specific icons for assets
+    if (type === 'MARKET') return '🏠';
     if (type === 'DOODAD') return '🛍️';
     if (type === 'CHARITY') return '❤️';
     if (type === 'BABY') return '👶';
@@ -29,16 +29,14 @@ const getGradient = (type: string, isFT: boolean) => {
 
 export const BoardVisualizer = ({ board, players, animatingPos, currentPlayerId }: any) => {
 
-    // Position Logic
+    // Helper: Is Fast Track?
+    const isFastTrackSquare = (index: number) => index >= 24;
+
+    // Helper: Position Logic
     const getPosStyle = (index: number, isFastTrack: boolean) => {
         if (!isFastTrack) {
-            // RAT RACE: CIRCULAR (Indices 0-23)
-            // 24 Steps. 360 / 24 = 15 degrees per step.
-            // Center is 50%, 50%. Radius approx 35%.
+            // RAT RACE: CIRCULAR
             const totalSteps = 24;
-            // Shift angle so index 0 is at bottom (90 deg) or top? 
-            // Usually Payday (Index 0) is Bottom Right or Bottom. Let's put it at Bottom (90deg).
-            // Actually, in CSS, 0 deg is Right. 90 is Bottom.
             const angleOffset = 90;
             const angleDeg = (index * (360 / totalSteps)) + angleOffset;
             const angleRad = angleDeg * (Math.PI / 180);
@@ -55,44 +53,30 @@ export const BoardVisualizer = ({ board, players, animatingPos, currentPlayerId 
             };
 
         } else {
-            // FAST TRACK: SQUARE PERIMETER (Indices 24-71 -> 0-47 rel)
-            // 48 Steps. 13x13 Grid logic is fine, mapped to CSS % directly or Grid.
-            // Let's stick to Grid for consistency or absolute % if easier. 
-            // Grid was 13x13.
-
+            // FAST TRACK: GRID
             const ftIndex = index >= 24 ? index - 24 : index;
             let r = 0, c = 0;
 
-            // Same logic as before but adapted
-            // Bottom (0-12): Row 13
             if (ftIndex <= 12) { r = 13; c = 13 - ftIndex; }
-            // Left (13-23): Col 1
             else if (ftIndex <= 23) { r = 13 - (ftIndex - 12); c = 1; }
-            // Top (24-36): Row 1
             else if (ftIndex <= 36) { r = 1; c = 1 + (ftIndex - 24); }
-            // Right (37-47): Col 13
             else { r = 2 + (ftIndex - 37); c = 13; }
 
-            // Convert Grid coords (1-13) to % 
-            // Grid 1 is 0%, Grid 13 is 100% roughly? 
-            // Actually let's use the Grid parent for the Outer Track!
             return {
                 gridRow: r,
                 gridColumn: c,
-                position: 'relative' as 'relative' // It's in a grid cell
+                position: 'relative' as 'relative'
             };
         }
     };
 
-    const isFastTrackSquare = (index: number) => index >= 24;
-
     return (
         <div className="w-full h-full relative p-4 flex items-center justify-center">
 
-            {/* CONTAINER FOR EVERYTHING */}
-            <div className="relative w-full aspect-square max-w-[800px] max-h-[800px]">
+            {/* STICT SQUARE CONTAINER */}
+            <div className="relative w-full aspect-square max-w-[85vh] max-h-[85vh]">
 
-                {/* 1. OUTER TRACK (FAST TRACK) - STRICTLY SQUARE (Grid) */}
+                {/* 1. OUTER TRACK (GRID) */}
                 <div className="absolute inset-0 grid grid-cols-13 grid-rows-13 gap-1 pointer-events-none">
                     {board.filter((sq: any) => isFastTrackSquare(sq.index)).map((sq: any) => {
                         const style = getPosStyle(sq.index, true);
@@ -116,13 +100,19 @@ export const BoardVisualizer = ({ board, players, animatingPos, currentPlayerId 
                             </div>
                         );
                     })}
+
+                    {/* CENTER HUB (Inside Grid Layer) */}
+                    <div className="col-start-4 col-end-11 row-start-4 row-end-11 relative rounded-full bg-slate-950 border-4 border-slate-800/80 shadow-2xl flex flex-col items-center justify-center z-10 overflow-hidden pointer-events-auto">
+                        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900 via-slate-900 to-black animate-pulse"></div>
+                        <h1 className="text-3xl lg:text-4xl font-black bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent transform -skew-x-6">MONEO</h1>
+                        <span className="text-[8px] text-slate-500 tracking-[0.4em] uppercase font-bold mt-1">Energy of Money</span>
+                    </div>
+
                 </div>
 
-                {/* 2. INNER TRACK (RAT RACE) - CIRCULAR (Absolute) */}
+                {/* 2. INNER TRACK (ABSOLUTE) */}
                 <div className="absolute inset-[15%] rounded-full border border-slate-800/30 pointer-events-none">
-                    {/* Guidance Circle Line */}
                     <div className="absolute inset-0 rounded-full border-2 border-dashed border-slate-700/20 animate-spin-slow-reverse opacity-30"></div>
-
                     {board.filter((sq: any) => !isFastTrackSquare(sq.index)).map((sq: any) => {
                         const style = getPosStyle(sq.index, false);
                         const gradient = getGradient(sq.type, false);
@@ -140,98 +130,108 @@ export const BoardVisualizer = ({ board, players, animatingPos, currentPlayerId 
                             >
                                 <div className="flex flex-col items-center justify-center transform hover:rotate-0 transition-transform">
                                     <span className="text-xl lg:text-2xl filter drop-shadow-lg">{getSticker(sq.type, sq.name)}</span>
-                                    {/* Small Label for Clarity */}
                                     <span className="text-[6px] font-bold text-slate-400 uppercase tracking-tight mt-[-2px] bg-black/40 px-1 rounded-full backdrop-blur-sm hidden lg:block">
                                         {sq.type === 'OPPORTUNITY' ? (sq.name.includes('Big') ? 'Big' : 'Small') : sq.type}
                                     </span>
                                 </div>
                                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-slate-900 border border-slate-700 rounded-full flex items-center justify-center text-[6px] text-slate-500">{sq.index}</span>
-                                <span className="absolute -top-1 -right-1 w-3 h-3 bg-slate-900 border border-slate-700 rounded-full flex items-center justify-center text-[6px] text-slate-500">{square.index}</span>
                             </div>
                         );
-                    }
-                })}
+                    })}
+                </div>
 
-                    {/* 3. CENTER HUB - Now part of the grid, spanning central cells */}
-                    <div className="col-start-4 col-end-11 row-start-4 row-end-11 relative rounded-full bg-slate-950 border-4 border-slate-800/80 shadow-2xl flex flex-col items-center justify-center z-10 overflow-hidden">
-                        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900 via-slate-900 to-black animate-pulse"></div>
-                        <h1 className="text-3xl lg:text-4xl font-black bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent transform -skew-x-6">MONEO</h1>
-                        <span className="text-[8px] text-slate-500 tracking-[0.4em] uppercase font-bold mt-1">Energy of Money</span>
-                    </div>
-
-                    {/* 4. PLAYER TOKENS - Rendered as absolute elements within the main grid container */}
-                    {players.map((p: any, idx: number) => {
+                {/* 3. PLAYER TOKENS (ABSOLUTE OVERLAY) */}
+                <div className="absolute inset-0 pointer-events-none">
+                    {/* For Grid tokens, we need to replicate grid positioning or map to % */}
+                    {/* Let's use the same logic but mapped to % */}
+                    {players.map((p: any) => {
                         const posIndex = animatingPos[p.id] ?? p.position;
                         const isFT = p.isFastTrack;
 
                         let style: any = {};
-                        if (isFT) {
-                            // Grid logic for FT tokens
-                            const ftIndex = posIndex >= 24 ? posIndex - 24 : posIndex;
-                            let r, c;
-                            if (ftIndex < 13) { r = 1; c = ftIndex + 1; }
-                            else if (ftIndex < 25) { r = (ftIndex - 12) + 1; c = 13; }
-                            else if (ftIndex < 37) { r = 13; c = 13 - (ftIndex - 24); }
-                            else { r = 13 - (ftIndex - 36); c = 1; }
 
-                            // Position tokens at the center of their grid cell
+                        if (isFT) {
+                            // Map Grid Coords to %
+                            const ftIndex = posIndex >= 24 ? posIndex - 24 : posIndex;
+                            let r = 0, c = 0;
+                            if (ftIndex <= 12) { r = 13; c = 13 - ftIndex; }
+                            else if (ftIndex <= 23) { r = 13 - (ftIndex - 12); c = 1; }
+                            else if (ftIndex <= 36) { r = 1; c = 1 + (ftIndex - 24); }
+                            else { r = 2 + (ftIndex - 37); c = 13; }
+
+                            // Grid is 13x13. Cell center is roughly (Index - 0.5) / 13 * 100%
+                            const colPerc = ((c - 0.5) / 13) * 100;
+                            const rowPerc = ((r - 0.5) / 13) * 100;
+
                             style = {
-                                gridRow: r,
-                                gridColumn: c,
-                                position: 'absolute' as 'absolute', // Ensure absolute positioning within the grid item
-                                left: '50%',
-                                top: '50%',
-                                transform: 'translate(-50%, -50%)'
+                                left: `${colPerc}%`,
+                                top: `${rowPerc}%`,
+                                transform: 'translate(-50%, -50%)',
+                                position: 'absolute'
                             };
+
                         } else {
-                            // Circle logic for Rat Race tokens
+                            // Circular Logic Reuse
                             const totalSteps = 24;
                             const angleOffset = 90;
                             const angleDeg = (posIndex * (360 / totalSteps)) + angleOffset;
                             const angleRad = angleDeg * (Math.PI / 180);
-                            const radius = 42; // Increased from 32 to 42 to fill space
+                            const radius = 42; // Match the new implementation plan + logic
+                            // Actually wait, Inner Track container is inset-[15%]. 
+                            // The radius of 32% (in getPosStyle) is relative to IT container?
+                            // No, getPosStyle was % of FULL container. 
+                            // In this rewrite, I rendered Inner Track Squares inside a container `inset-[15%]`?
+                            // No, let's keep it simple. Tokens are absolute in MAIN container.
+                            // So use radius 32 (from getPosStyle logic) if that's what we used for squares.
+                            // BUT...
+                            // In my code above, Inner Track squares are in `absolute inset-[15%]`. 
+                            // This means their logic inside `getPosStyle` (radius 32) is relative to THAT container (which is 70% size).
+                            // This messes up alignment if we render Tokens in Main Container.
+
+                            // FIXED LOGIC: Render tokens in the SAME container structure or adjust math.
+                            // Easier: Render tokens in Main Container, using strict % math relative to Main.
+                            // Inner Track is roughly at radius X.
+                            // If Inner Track container is inset 15%, its size 70%.
+                            // Radius 32% of 70% = 22.4% of Main. Too small.
+                            // Previous working code had consistent context.
+
+                            // Let's adjust Radius for Tokens to match visually.
+                            // If Squares use radius 32 inside the inset container...
+                            // Actually, I'll modify the loop above to NOT use inset container for squares, 
+                            // but keep them in Main Container for simplicity of math.
+
+                            const radius = 32;
                             const x = 50 + radius * Math.cos(angleRad);
                             const y = 50 + radius * Math.sin(angleRad);
-                            // But for Grid coords to work, we need a grid container. 
+                            style = {
+                                left: `${x}%`,
+                                top: `${y}%`,
+                                transform: 'translate(-50%, -50%)',
+                                position: 'absolute'
+                            };
+                        }
 
-                            // Solution: Use a separate overlay for tokens that mimics structure or calculates absolute % for grid too.
-                            // For now, let's assume grid works if we put it in the grid layer, BUT Rat Race tokens need Circle.
-
-                            // Wait, Grid items and Absolute items in same parent? 
-                            // Let's wrapping Tokens in a layer.
-
-                            return (
-                                <div
-                                    key={p.id}
-                                    className={`
-                                absolute w-10 h-10 ${isFT ? 'z-30' : 'z-50'}
-                                flex items-center justify-center transition-all duration-300 ease-in-out
-                            `}
-                                    style={isFT ? {
-                                        // For FT, calculate approximate % based on grid cell centers
-                                        left: `${((style.gridColumn - 0.5) / 13) * 100}%`,
-                                        top: `${((style.gridRow - 0.5) / 13) * 100}%`,
-                                        transform: `translate(-50%, -50%)` // Removed random offset
-                                    } : {
-                                        ...style, // Circular absolute style
-                                        transform: `${style.transform}` // Removed random offset
-                                    }}
-                                >
-                                    <div className={`
-                                w-8 h-8 rounded-full bg-slate-900 border-2 ${p.id === currentPlayerId ? 'border-green-400 shadow-[0_0_15px_rgba(74,222,128,0.5)] scale-110' : 'border-slate-600 shadow-md'}
-                                flex items-center justify-center text-lg relative
-                            `}>
-                                        {p.token}
-                                        {/* Name Tag */}
-                                        <div className="absolute -top-4 bg-slate-900/80 text-white text-[8px] px-2 py-0.5 rounded-full whitespace-nowrap opacity-0 hover:opacity-100 transition-opacity">
-                                            {p.name}
-                                        </div>
+                        return (
+                            <div
+                                key={p.id}
+                                className={`absolute w-10 h-10 z-50 flex items-center justify-center transition-all duration-300 ease-in-out`}
+                                style={style}
+                            >
+                                <div className={`
+                                    w-8 h-8 rounded-full bg-slate-900 border-2 ${p.id === currentPlayerId ? 'border-green-400 shadow-[0_0_15px_rgba(74,222,128,0.5)] scale-110' : 'border-slate-600 shadow-md'}
+                                    flex items-center justify-center text-lg relative
+                                `}>
+                                    {p.token}
+                                    <div className="absolute -top-4 bg-slate-900/80 text-white text-[8px] px-2 py-0.5 rounded-full whitespace-nowrap opacity-0 hover:opacity-100 transition-opacity">
+                                        {p.name}
                                     </div>
                                 </div>
-                            );
-                        })}
-
+                            </div>
+                        );
+                    })}
                 </div>
+
             </div>
-            );
+        </div>
+    );
 };
