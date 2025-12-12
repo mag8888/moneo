@@ -125,12 +125,8 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
         };
     }, []);
 
-    const handleLoan = (amount: number) => socket.emit('take_loan', { roomId, amount });
-    const handleRepay = (amount: number) => socket.emit('repay_loan', { roomId, amount });
-    const handleRoll = () => socket.emit('roll_dice', { roomId });
-    const handleEndTurn = () => socket.emit('end_turn', { roomId });
-    const handleBuy = () => socket.emit('buy_asset', { roomId });
 
+    // Duplicates removed - these are now handled via engineRef or were redefined at the top level
     const currentPlayer = state.players[state.currentPlayerIndex];
     if (!currentPlayer) return <div>Loading...</div>; // Safety check
 
