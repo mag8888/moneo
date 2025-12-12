@@ -45,6 +45,7 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
     const [diceValue, setDiceValue] = useState<number | null>(null);
     const [pendingState, setPendingState] = useState<any>(null);
     const [squareInfo, setSquareInfo] = useState<any>(null);
+    const [babyNotification, setBabyNotification] = useState<string | null>(null);
 
     // Timer State
     const [timeLeft, setTimeLeft] = useState(120);
@@ -56,6 +57,19 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
     useEffect(() => {
         setHasRolled(false);
     }, [state.currentPlayerIndex]);
+
+    useEffect(() => {
+        if (state.lastEvent?.type === 'BABY_BORN') {
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#FF69B4', '#87CEEB', '#FFD700', '#ffffff']
+            });
+            setBabyNotification(`👶 Поздравляем! В семье ${state.lastEvent.payload?.player} пополнение!`);
+            setTimeout(() => setBabyNotification(null), 5000);
+        }
+    }, [state.lastEvent]);
 
     const handleRoll = () => {
         socket.emit('roll_dice', { roomId });
