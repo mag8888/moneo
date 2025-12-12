@@ -278,38 +278,82 @@ export class GameEngine {
 
     movePlayer(steps: number) {
         const player = this.state.players[this.state.currentPlayerIndex];
+        const oldPos = player.position;
+        const trackLength = player.isFastTrack ? 48 : 24;
 
+        let currentPos = oldPos;
+
+        // Iterate through each step to check for passed Paydays
+        for (let i = 1; i <= steps; i++) {
+            currentPos++;
+            const effectivePos = currentPos % trackLength;
+
+            // Check if passed/landed square is PAYDAY
+            // Note: In Rat Race, index 24 (wrap) is NOT a square, but index 0 is Deal.
+            // If we wrap, we pass logical "Start". 
+            // In Cashflow, specific squares are Paydays.
+            // If player is on Fast Track, check FAST_TRACK_SQUARES.
+            // If player is on Rat Race, check RAT_RACE_SQUARES.
+
+            const squareIndex = effectivePos; // already modulo'd
+            let squareType = '';
+
+            if (player.isFastTrack) {
+                // Index 24-71 in global array, but 0-47 in local logic?
+                // Wait, existing logic uses global indices 24+ for Fast Track in FAST_TRACK_SQUARES.
+                // But player.position for Fast Track was being treated as 0-47 relative in some places?
+                // Let's check:
+                // FAST_TRACK_SQUARES indices are 24..71.
+                // player.position initially set to 0 in checkFastTrackCondition (Line 252).
+                // So player.position is 0-47 relative to Fast Track start?
+                // The getSquare mock used `this.state.board[pos]`.
+                // `FULL_BOARD` concat means index 0-23 (Rat), 24-71 (Fast).
+                // So if player.position is 0 (Fast Track Start), that maps to global index 24.
+                // We need to map local pos to global pos.
+
+                // Let's assume player.position for FT is 0-47.
+                // So we check `FAST_TRACK_SQUARES[squareIndex]`?
+                // `FAST_TRACK_SQUARES` starts at index 24. 
+                // We should access `this.state.board[24 + squareIndex]`.
+
+                const globalIndex = 24 + squareIndex;
+                const square = this.getSquare(globalIndex);
+                if (square && square.type === 'PAYDAY') {
+                    player.cash += player.cashflow;
+                    this.state.log.push(`💰 ${player.name} passed Payday! +$${player.cashflow}`);
+                }
+
+                // Also handling the generic "Bank Settlement" at start/wrap? 
+                // If index 0 of Fast Track (Global 24) is Payday, it's covered above.
+
+            } else {
+                // Rat Race
+                const square = this.getSquare(squareIndex);
+                if (square && square.type === 'PAYDAY') {
+                    player.cash += player.cashflow;
+                    this.state.log.push(`💰 ${player.name} passed Payday! +$${player.cashflow}`);
+                }
+            }
+        }
+
+        // Final Position Update
+        const finalPos = (oldPos + steps) % trackLength;
+        player.position = finalPos;
+
+        // Trigger Landing Logic
         if (player.isFastTrack) {
-            const trackLength = 48; // Fast Track length
-            let newPos = player.position + steps;
-
-            // Fast Track Payday Logic
-            if (newPos >= trackLength) {
-                newPos = newPos % trackLength;
-                player.cash += player.cashflow; // Or specific Fast Track Amount?
-                this.state.log.push(`${player.name} passed Fast Track Payday! +$${player.cashflow}`);
-            }
-            player.position = newPos;
-
-            // Handle Squares (Mock for now, using modulo to simulate types)
-            this.handleFastTrackSquare(player, newPos);
-
+            // Convert local 0-47 to global 24-71 for handler?
+            // handleFastTrackSquare expects GLOBAL position?
+            // Line 320: `handleFastTrackSquare(player, position)`
+            // Line 317: `getSquare(pos)` uses `this.state.board[pos]`.
+            // So `handleFastTrackSquare` MUST receive GLOBAL position.
+            this.handleFastTrackSquare(player, 24 + finalPos);
         } else {
-            // Rat Race Logic
-            const oldPos = player.position;
-            let newPos = player.position + steps;
-
-            if (newPos >= 24) {
-                newPos = newPos % 24;
-                // Payday
-                player.cash += player.cashflow;
-                this.state.log.push(`${player.name} passed Payday! +$${player.cashflow}`);
-            }
-            player.position = newPos;
-            const square = this.getSquare(newPos);
+            const square = this.getSquare(finalPos);
             this.state.log.push(`${player.name} moved to ${square.name}`);
             this.handleSquare(player, square);
         }
+
         this.state.phase = 'ACTION';
     }
 
