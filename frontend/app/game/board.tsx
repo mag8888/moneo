@@ -794,28 +794,35 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                     )}
 
                     {/* Opportunity Choice Overlay */}
-                    {state.phase === 'OPPORTUNITY_CHOICE' && isMyTurn && (
-                        <div className="absolute inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in zoom-in duration-200">
-                            <div className="bg-[#1e293b] w-full max-w-sm p-6 rounded-3xl border border-slate-700 shadow-2xl relative text-center">
-                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-500 to-amber-600"></div>
-                                <div className="text-5xl mb-4">⚡</div>
-                                <h2 className="text-xl font-bold text-white mb-2">Возможность</h2>
-                                <p className="text-slate-400 text-sm mb-6">Выберите тип сделки:</p>
+                    {state.phase === 'OPPORTUNITY_CHOICE' && (
+                        <div className="absolute inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in zoom-in duration-200">
+                            {isMyTurn ? (
+                                <div className="bg-[#1e293b] w-full max-w-sm p-6 rounded-3xl border border-slate-700 shadow-2xl relative text-center">
+                                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-500 to-amber-600"></div>
+                                    <div className="text-5xl mb-4">⚡</div>
+                                    <h2 className="text-xl font-bold text-white mb-2">Возможность</h2>
+                                    <p className="text-slate-400 text-sm mb-6">Выберите тип сделки:</p>
 
-                                <div className="flex gap-2 w-full">
-                                    <button onClick={() => socket.emit('resolve_opportunity', { roomId, choice: 'SMALL' })} className="flex-1 bg-gradient-to-br from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-bold py-4 rounded-2xl text-sm shadow-xl shadow-green-900/40 relative overflow-hidden group transform hover:-translate-y-1 transition-all">
-                                        <div className="relative z-10">Малая</div>
-                                        <div className="text-[10px] opacity-70 relative z-10">До $5,000</div>
-                                        <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                                    </button>
+                                    <div className="flex gap-2 w-full">
+                                        <button onClick={() => socket.emit('resolve_opportunity', { roomId, choice: 'SMALL' })} className="flex-1 bg-gradient-to-br from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-bold py-4 rounded-2xl text-sm shadow-xl shadow-green-900/40 relative overflow-hidden group transform hover:-translate-y-1 transition-all">
+                                            <div className="relative z-10">Малая</div>
+                                            <div className="text-[10px] opacity-70 relative z-10">До $5,000</div>
+                                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                                        </button>
 
-                                    <button onClick={() => socket.emit('resolve_opportunity', { roomId, choice: 'BIG' })} className="flex-1 bg-gradient-to-br from-purple-500 to-indigo-600 hover:from-purple-400 hover:to-indigo-500 text-white font-bold py-4 rounded-2xl text-sm shadow-xl shadow-purple-900/40 relative overflow-hidden group transform hover:-translate-y-1 transition-all">
-                                        <div className="relative z-10">Крупная</div>
-                                        <div className="text-[10px] opacity-70 relative z-10">$6,000+</div>
-                                        <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                                    </button>
+                                        <button onClick={() => socket.emit('resolve_opportunity', { roomId, choice: 'BIG' })} className="flex-1 bg-gradient-to-br from-purple-500 to-indigo-600 hover:from-purple-400 hover:to-indigo-500 text-white font-bold py-4 rounded-2xl text-sm shadow-xl shadow-purple-900/40 relative overflow-hidden group transform hover:-translate-y-1 transition-all">
+                                            <div className="relative z-10">Крупная</div>
+                                            <div className="text-[10px] opacity-70 relative z-10">$6,000+</div>
+                                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
+                            ) : (
+                                <div className="bg-[#1e293b] w-full max-w-xs p-6 rounded-3xl border border-slate-700 shadow-2xl text-center">
+                                    <h2 className="text-xl font-bold text-white mb-2">⚡ Возможность</h2>
+                                    <p className="text-slate-400 text-sm">Игрок выбирает сделку...</p>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
