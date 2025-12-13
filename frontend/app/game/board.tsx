@@ -183,7 +183,7 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                     if (square && !['roll_dice', 'end_turn'].includes(data.state.phase)) {
                         // Only show popup for types that DON'T have their own Overlay (Expense/Market=Card, Charity=Overlay)
                         // DEAL needs this for "Small/Big" choice.
-                        if (!['EXPENSE', 'MARKET', 'CHARITY'].includes(square.type)) {
+                        if (!['EXPENSE', 'MARKET', 'CHARITY', 'DEAL'].includes(square.type)) {
                             setSquareInfo(square);
                         }
                     }
@@ -848,8 +848,17 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                                         } `}
                                 >
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
-                                    <span className={`text-3xl filter drop-shadow-xl transition-transform duration-500 ${!hasRolled && isMyTurn ? 'group-hover:rotate-[360deg]' : ''}`}>🎲</span>
-                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] relative z-10">Бросок</span>
+                                    {hasRolled ? (
+                                        <div className="flex flex-col items-center animate-in zoom-in duration-300">
+                                            <span className="text-4xl font-black text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">{diceValue}</span>
+                                            <span className="text-[8px] text-emerald-200 uppercase tracking-wider font-bold">Выпало</span>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <span className={`text-3xl filter drop-shadow-xl transition-transform duration-500 ${!hasRolled && isMyTurn ? 'group-hover:rotate-[360deg]' : ''}`}>🎲</span>
+                                            <span className="text-[10px] font-black uppercase tracking-[0.2em] relative z-10">Бросок</span>
+                                        </>
+                                    )}
                                 </button>
                             )}
                             <button
