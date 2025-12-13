@@ -1210,6 +1210,7 @@ export class GameEngine {
         if (nextPlayer.skippedTurns > 0) {
             nextPlayer.skippedTurns--;
             this.state.log.push(`🚫 ${nextPlayer.name} skips turn (Remaining: ${nextPlayer.skippedTurns})`);
+            this.state.lastEvent = { type: 'TURN_SKIPPED', payload: { player: nextPlayer.name, remaining: nextPlayer.skippedTurns } };
             this.endTurn(); // Recursively skip
         }
     }

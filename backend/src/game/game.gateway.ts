@@ -370,6 +370,10 @@ export class GameGateway {
             socket.on('end_turn', ({ roomId }) => {
                 const game = this.games.get(roomId);
                 if (game) {
+                    // Prevent Ending Turn if Phase is ROLL (Must roll first)
+                    if (game.getState().phase === 'ROLL') {
+                        return;
+                    }
                     game.endTurn();
                     const state = game.getState();
                     this.io.to(roomId).emit('turn_ended', { state });
