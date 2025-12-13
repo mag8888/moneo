@@ -200,39 +200,47 @@ export class RoomService {
             }
         }
 
-        // 2. Atomic Update
-        // We match by roomId AND (playerId OR userId) to be safe.
-        // Actually, we should match by the immutable identifier we found: userId if available, else socketId.
-        // Since we trust userId most:
-        const matchQuery = userId
-            ? { _id: roomId, "players.userId": userId }
-            : { _id: roomId, "players.id": playerId };
-
-        const update: any = {
+        // 2. Atomic Update using arrayFilters for robustness
+        const filter = { _id: roomId };
+        const updateOp: any = {
             $set: {
-                "players.$.isReady": isReady
+                "players.$[elem].isReady": isReady,
+                "players.$[elem].id": playerId // Always update socket ID
             }
         };
 
-        if (dream) update.$set["players.$.dream"] = dream;
-        if (token) update.$set["players.$.token"] = token;
-        // Always update / confirm socket ID
-        update.$set["players.$.id"] = playerId;
+        if (dream) updateOp.$set["players.$[elem].dream"] = dream;
+        if (token) updateOp.$set["players.$[elem].token"] = token;
 
-        console.log('RoomService.setPlayerReady: matchQuery', JSON.stringify(matchQuery), 'update', JSON.stringify(update));
+        // Match the player by userId preference, then socketId
+        // We need to know WHICH one to match.
+        // Since we did a check above:
+        // let player = roomCheck.players.find(p => p.id === playerId);
+        // if (!player && userId) player = roomCheck.players.find(p => p.userId === userId);
+
+        // We know 'player' exists and we know its userId/id.
+        // We should target that specific player.
+        const targetUserId = player!.userId;
+        const targetSocketId = player!.id;
+
+        const arrayFilters = targetUserId
+            ? [{ "elem.userId": targetUserId }]
+            : [{ "elem.id": targetSocketId }];
+
+        console.log('RoomService.setPlayerReady: filter', JSON.stringify(filter), 'update', JSON.stringify(updateOp), 'arrayFilters', JSON.stringify(arrayFilters));
 
         const updatedRoom = await RoomModel.findOneAndUpdate(
-            matchQuery,
-            update,
-            { new: true }
+            filter,
+            updateOp,
+            {
+                new: true,
+                arrayFilters: arrayFilters
+            }
         ).lean();
 
         if (!updatedRoom) {
-            console.error('RoomService.setPlayerReady FAILED to find document. matchQuery:', JSON.stringify(matchQuery));
-            // Debug: Check if room exists at all
-            const roomExists = await RoomModel.findById(roomId);
-            console.error('Debug: Room exists?', !!roomExists, 'Players:', roomExists ? JSON.stringify(roomExists.players) : 'N/A');
-            throw new Error("Update failed (Player lost?)");
+            console.error('RoomService.setPlayerReady FAILED to find document or update.');
+            throw new Error("Update failed");
         }
 
         // Find modified player to log result
