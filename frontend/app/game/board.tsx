@@ -384,8 +384,14 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
             {squareInfo && (
                 <div className="absolute inset-0 z-[90] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setSquareInfo(null)}>
                     <div className="bg-[#1e293b] border border-slate-600 p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center relative overflow-hidden" onClick={e => e.stopPropagation()}>
-                        {/* Gradient Line */}
-                        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+                        {/* Gradient Line handled by helper */}
+                        <div className={`absolute top-0 left-0 w-full h-2 bg-gradient-to-r ${['DREAM'].includes(squareInfo.type) ? 'from-fuchsia-600 to-purple-600' :
+                                ['BUSINESS', 'MARKET', 'DEAL', 'OPPORTUNITY'].includes(squareInfo.type) ? 'from-emerald-500 to-green-600' :
+                                    ['LOSS', 'EXPENSE', 'DOODAD', 'DOWNSIZED', 'TAX'].includes(squareInfo.type) ? 'from-red-700 to-rose-900' :
+                                        squareInfo.type === 'PAYDAY' ? 'from-yellow-500 to-amber-500' :
+                                            squareInfo.type === 'BABY' ? 'from-pink-400 to-blue-400' :
+                                                'from-blue-500 to-indigo-500' // Default
+                            }`}></div>
 
                         {/* Close Button */}
                         <button onClick={() => setSquareInfo(null)} className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">✕</button>
@@ -395,24 +401,34 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                                 squareInfo.type === 'BABY' ? '👶' :
                                     squareInfo.type === 'PAYDAY' ? '💰' :
                                         squareInfo.type === 'DOWNSIZED' ? '📉' :
-                                            squareInfo.type === 'CHARITY' ? '❤️' : '📍'}
+                                            squareInfo.type === 'CHARITY' ? '❤️' :
+                                                squareInfo.type === 'DREAM' ? '✨' :
+                                                    squareInfo.type === 'BUSINESS' ? '🏢' :
+                                                        ['LOSS', 'EXPENSE', 'DOODAD'].includes(squareInfo.type) ? '💸' : '📍'}
                         </div>
 
                         <h3 className="text-2xl font-black text-white uppercase tracking-wider mb-2">{squareInfo.name || squareInfo.type}</h3>
 
-                        <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800 mb-6">
-                            {squareInfo.cost ? (
-                                <div className="flex flex-col gap-1">
-                                    <span className="text-xs text-slate-500 uppercase font-bold">Стоимость / Платеж</span>
-                                    <span className="text-2xl font-mono text-red-400 font-bold">-${squareInfo.cost.toLocaleString()}</span>
+                        <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800 mb-6 flex flex-col gap-2">
+                            {/* Cost */}
+                            {squareInfo.cost !== undefined && squareInfo.cost !== null && (
+                                <div className="flex justify-between items-center border-b border-slate-800/50 pb-2 last:border-0 last:pb-0">
+                                    <span className="text-xs text-slate-500 uppercase font-bold">Стоимость</span>
+                                    <span className="text-xl font-mono text-red-400 font-bold">-${squareInfo.cost.toLocaleString()}</span>
                                 </div>
-                            ) : squareInfo.cashflow ? (
-                                <div className="flex flex-col gap-1">
-                                    <span className="text-xs text-slate-500 uppercase font-bold">Денежный поток</span>
-                                    <span className="text-2xl font-mono text-green-400 font-bold">+${squareInfo.cashflow.toLocaleString()}</span>
+                            )}
+
+                            {/* Cashflow / Income */}
+                            {squareInfo.cashflow !== undefined && squareInfo.cashflow !== null && (
+                                <div className="flex justify-between items-center border-b border-slate-800/50 pb-2 last:border-0 last:pb-0">
+                                    <span className="text-xs text-slate-500 uppercase font-bold">Доход</span>
+                                    <span className="text-xl font-mono text-green-400 font-bold">+${squareInfo.cashflow.toLocaleString()}</span>
                                 </div>
-                            ) : (
-                                <span className="text-slate-400 italic text-sm">Нет стоимости</span>
+                            )}
+
+                            {/* Fallback if neither */}
+                            {!squareInfo.cost && !squareInfo.cashflow && (
+                                <span className="text-slate-400 italic text-sm">Информация отсутствует</span>
                             )}
                         </div>
 
