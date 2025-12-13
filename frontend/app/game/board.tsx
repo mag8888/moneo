@@ -778,7 +778,7 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                                 <div className="text-5xl mb-4">❤️</div>
                                 <h2 className="text-xl font-bold text-white mb-2">Благотворительность</h2>
                                 <p className="text-slate-400 text-sm mb-6">
-                                    Пожертвуйте {me.isFastTrack ? '$100,000' : '10% от общего дохода'}, чтобы получить возможность выбирать 1, 2 или 3 кубика на следующие 3 хода.
+                                    Пожертвуйте {me.isFastTrack ? '$100,000' : '10% от общего дохода'}, чтобы получить возможность выбирать {me.isFastTrack ? '1, 2 или 3' : '1 или 2'} кубика на следующие 3 хода.
                                 </p>
 
                                 <div className="flex gap-2 w-full">
