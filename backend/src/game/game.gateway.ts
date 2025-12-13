@@ -164,6 +164,7 @@ export class GameGateway {
             // Player Ready
             socket.on('player_ready', async (data, callback) => {
                 try {
+                    console.log('socket event: player_ready', JSON.stringify(data));
                     const { roomId, isReady, dream, token, userId } = data; // Expect userId
                     const room = await this.roomService.setPlayerReady(
                         roomId,
@@ -176,6 +177,7 @@ export class GameGateway {
                     this.io.to(roomId).emit('room_state_updated', room);
                     callback({ success: true });
                 } catch (e: any) {
+                    console.error('player_ready error:', e);
                     callback({ success: false, error: e.message });
                 }
             });

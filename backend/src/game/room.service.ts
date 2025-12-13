@@ -219,13 +219,25 @@ export class RoomService {
         // Always update / confirm socket ID
         update.$set["players.$.id"] = playerId;
 
+        console.log('RoomService.setPlayerReady: matchQuery', JSON.stringify(matchQuery), 'update', JSON.stringify(update));
+
         const updatedRoom = await RoomModel.findOneAndUpdate(
             matchQuery,
             update,
             { new: true }
         ).lean();
 
-        if (!updatedRoom) throw new Error("Update failed (Player lost?)");
+        if (!updatedRoom) {
+            console.error('RoomService.setPlayerReady FAILED to find document. matchQuery:', JSON.stringify(matchQuery));
+            // Debug: Check if room exists at all
+            const roomExists = await RoomModel.findById(roomId);
+            console.error('Debug: Room exists?', !!roomExists, 'Players:', roomExists ? JSON.stringify(roomExists.players) : 'N/A');
+            throw new Error("Update failed (Player lost?)");
+        }
+
+        // Find modified player to log result
+        const p = updatedRoom.players.find(p => p.userId === userId || p.id === playerId);
+        console.log('RoomService.setPlayerReady SUCCESS. Updated player:', JSON.stringify(p));
 
         return this.sanitizeRoom(updatedRoom);
     }
