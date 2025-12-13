@@ -283,23 +283,30 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
     }, [state.players]);
 
     useEffect(() => {
-        state.players.forEach((p: PlayerState) => {
-            const currentDisplayPos = animatingPos[p.id] ?? p.position;
-            if (currentDisplayPos !== p.position) {
-                let nextPos = currentDisplayPos;
-                const interval = setInterval(() => {
-                    if (nextPos === p.position) {
-                        clearInterval(interval);
-                        return;
+        const interval = setInterval(() => {
+            setAnimatingPos(prev => {
+                const next = { ...prev };
+                let changed = false;
+
+                state.players.forEach((p: PlayerState) => {
+                    const currentDisplayPos = prev[p.id] ?? p.position;
+
+                    if (currentDisplayPos !== p.position) {
+                        const max = p.isFastTrack ? 48 : 24;
+                        // Move one step forward
+                        // NOTE: This handles forward movement. If a player was reset back (e.g. 5 -> 0), 
+                        // they will walk 5->6...->23->0. This is usually desired visual effect.
+                        next[p.id] = (currentDisplayPos + 1) % max;
+                        changed = true;
                     }
-                    const max = p.isFastTrack ? 48 : 24;
-                    nextPos = (nextPos + 1) % max;
-                    setAnimatingPos(prev => ({ ...prev, [p.id]: nextPos }));
-                }, 500);
-                return () => clearInterval(interval);
-            }
-        });
-    }, [state.players, animatingPos]);
+                });
+
+                return changed ? next : prev;
+            });
+        }, 500);
+
+        return () => clearInterval(interval);
+    }, [state.players]);
 
     // Format MM:SS
     const formatTime = (seconds: number) => {
