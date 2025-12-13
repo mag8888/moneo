@@ -668,6 +668,14 @@ export class GameEngine {
         player.expenses += interest;
         player.cashflow = player.income - player.expenses;
 
+        this.recordTransaction({
+            from: 'Bank',
+            to: player.name,
+            amount: amount,
+            description: 'Bank Loan',
+            type: 'LOAN'
+        });
+
         this.state.log.push(`${player.name} took loan $${amount}. Expenses +$${interest}/mo`);
     }
 
@@ -765,6 +773,14 @@ export class GameEngine {
 
         player.expenses -= interest;
         player.cashflow = player.income - player.expenses;
+
+        this.recordTransaction({
+            from: player.name,
+            to: 'Bank',
+            amount: amount,
+            description: 'Repay Loan',
+            type: 'REPAY'
+        });
 
         this.state.log.push(`${player.name} repaid loan $${amount}. Expenses -$${interest}/mo`);
 
