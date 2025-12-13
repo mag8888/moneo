@@ -20,6 +20,8 @@ export default function Lobby() {
     const [newRoomName, setNewRoomName] = useState('');
     const [maxPlayers, setMaxPlayers] = useState(4);
 
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
     // Lazy init to avoid hydration mismatch while reading from LS immediately on client
     const [user, setUser] = useState<any>(null);
     const [mounted, setMounted] = useState(false);
@@ -45,11 +47,13 @@ export default function Lobby() {
     };
 
     const createRoom = () => {
-        if (!newRoomName || !user) return;
+        if (!newRoomName || !user || isSubmitting) return;
+        setIsSubmitting(true);
         const playerName = user.firstName || user.username || 'Guest';
         const userId = user._id || user.id;
 
         socket.emit('create_room', { name: newRoomName, maxPlayers, timer: 120, playerName, userId }, (response: any) => {
+            setIsSubmitting(false);
             if (response.success) {
                 router.push(`/game?id=${response.room.id}`);
             } else {
@@ -142,9 +146,10 @@ export default function Lobby() {
 
                             <button
                                 onClick={createRoom}
-                                className="bg-green-600 hover:bg-green-700 px-6 py-2 rounded-lg w-full sm:w-auto self-end"
+                                disabled={isSubmitting}
+                                className={`bg-green-600 hover:bg-green-700 px-6 py-2 rounded-lg w-full sm:w-auto self-end transition-all ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
-                                Создать
+                                {isSubmitting ? 'Создание...' : 'Создать'}
                             </button>
                         </div>
                     </div>
