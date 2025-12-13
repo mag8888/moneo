@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { socket } from '../socket';
+import { RulesModal } from '../game/RulesModal';
 
 interface Room {
     id: string;
@@ -21,6 +22,7 @@ export default function Lobby() {
     const [maxPlayers, setMaxPlayers] = useState(4);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showRules, setShowRules] = useState(false);
 
     // Lazy init to avoid hydration mismatch while reading from LS immediately on client
     const [user, setUser] = useState<any>(null);
@@ -186,6 +188,22 @@ export default function Lobby() {
                     )}
                 </div>
             </div>
+
+            {/* Rules Modal */}
+            {showRules && <RulesModal onClose={() => setShowRules(false)} />}
+
+            {/* Fixed Bottom Bar for Rules */}
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-slate-900/90 backdrop-blur-md border-t border-slate-800 flex justify-center z-50">
+                <button
+                    onClick={() => setShowRules(true)}
+                    className="w-full max-w-4xl py-4 rounded-xl bg-violet-500/10 border border-violet-500/30 text-violet-400 font-bold uppercase tracking-widest text-sm hover:bg-violet-500/20 active:bg-violet-500/30 transition-all flex items-center justify-center gap-3 shadow-lg shadow-violet-900/10"
+                >
+                    <span>📜</span> Правила Игры
+                </button>
+            </div>
+
+            {/* Spacer for bottom bar */}
+            <div className="h-24"></div>
         </div>
     );
 }
