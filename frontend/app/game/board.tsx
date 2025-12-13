@@ -96,6 +96,24 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
             });
             setBabyNotification(`👶 Поздравляем! В семье ${state.lastEvent.payload?.player} пополнение!`);
             setTimeout(() => setBabyNotification(null), 5000);
+        } else if (state.lastEvent?.type === 'LOTTERY_WIN') {
+            confetti({
+                particleCount: 200,
+                spread: 100,
+                origin: { y: 0.6 },
+                colors: ['#FFD700', '#FFA500', '#00FF00', '#ffffff']
+            });
+            // Construct a "Square-like" object to show in the info modal
+            const wonCard = state.lastEvent.payload.card;
+            setSquareInfo({
+                ...wonCard,
+                name: `🏆 WON: ${wonCard.title}`,
+                description: `Вы выиграли этот актив в лотерею! ${wonCard.description || ''}`,
+                cost: 0 // Show as free? Or show original value? UI shows cost as RED. Maybe show Cashflow only?
+                // If I set cost to null, it won't show "Cost -$X".
+                // If I set cashflow, it will show GREEN.
+            });
+            // No timeout to close, let user close it.
         }
     }, [state.lastEvent]);
 

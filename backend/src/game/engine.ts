@@ -437,15 +437,38 @@ export class GameEngine {
                 break;
 
             case 'LOTTERY':
-                // Pick any random square from Fast Track (indices 24 to 70)
-                // Filter out LOTTERY itself to avoid infinite recursion if we only have one lottery square? 
-                // Or just pick randomly.
-                const eligibleSquares = FAST_TRACK_SQUARES.filter(sq => sq.type !== 'LOTTERY' && sq.type !== 'PAYDAY'); // Exclude Payday? User said "Any DEAL". Let's exclude Payday to be exciting. Or include all? "Any card of the big track". Let's include all except Lottery itself.
+                // "Выпадет любая сделка внешнего круга" -> Gives a Fast Track BUSINESS for FREE
+                const eligibleSquares = FAST_TRACK_SQUARES.filter(sq => sq.type === 'BUSINESS');
                 const randomSquare = eligibleSquares[Math.floor(Math.random() * eligibleSquares.length)];
 
-                this.state.log.push(`🎰 LOTTERY! Teleporting effect to: ${randomSquare.name}`);
-                // Recursive call with square object
-                this.handleFastTrackSquare(player, randomSquare);
+                // Give for Free!
+                player.passiveIncome += (randomSquare.cashflow || 0);
+                // Should we increase income too? Fast track income = passive income.
+                // In Fast Track logic, usually cashflow is the main metric.
+                player.income = player.salary + player.passiveIncome;
+                player.cashflow = player.income - player.expenses;
+
+                // Add Asset
+                player.assets.push({
+                    title: randomSquare.name,
+                    cost: randomSquare.cost, // Keep value reference
+                    cashflow: randomSquare.cashflow
+                });
+
+                this.state.log.push(`🎰 LOTTERY WINNER! Won ${randomSquare.name} (Value $${randomSquare.cost}) for FREE!`);
+                this.state.lastEvent = {
+                    type: 'LOTTERY_WIN',
+                    payload: {
+                        player: player.name,
+                        card: {
+                            type: randomSquare.type,
+                            title: randomSquare.name,
+                            cost: randomSquare.cost,
+                            cashflow: randomSquare.cashflow,
+                            description: randomSquare.description || 'Won in Lottery'
+                        }
+                    }
+                };
                 break;
         }
     }
