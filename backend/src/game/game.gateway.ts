@@ -19,17 +19,22 @@ export class GameGateway {
         const activeRooms = await this.roomService.getActiveGames();
         console.log(`Restoring ${activeRooms.length} active games...`);
         for (const room of activeRooms) {
-            if (room.gameState) {
-                const engine = new GameEngine(room.id, room.players);
-                // Hydrate state but FORCE UPDATE BOARD structure (to apply layout fixes to existing games)
-                Object.assign(engine.state, room.gameState);
+            try {
+                if (room.gameState) {
+                    const engine = new GameEngine(room.id, room.players);
+                    // Hydrate state but FORCE UPDATE BOARD structure (to apply layout fixes to existing games)
+                    Object.assign(engine.state, room.gameState);
 
-                // CRITICAL FIX: Overwrite the restored board with the new code definition
-                // This ensures old games get the new Payday/Deal layout
-                engine.state.board = FULL_BOARD;
+                    // CRITICAL FIX: Overwrite the restored board with the new code definition
+                    // This ensures old games get the new Payday/Deal layout
+                    engine.state.board = FULL_BOARD;
 
-                this.games.set(room.id, engine);
-                console.log(`Restored game ${room.id} (Turn: ${room.gameState.currentTurnTime}) | Board Updated`);
+                    this.games.set(room.id, engine);
+                    console.log(`Restored game ${room.id} (Turn: ${room.gameState.currentTurnTime}) | Board Updated`);
+                }
+            } catch (err) {
+                console.error(`Failed to restore room ${room.id}:`, err);
+                // Continue to next room - DO NOT CRASH SERVER
             }
         }
     }
