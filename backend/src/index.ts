@@ -131,7 +131,11 @@ const bootstrap = async () => {
         const botService = new BotService();
         // Initialize Game Gateway
         const gameGateway = new GameGateway(io);
-        await gameGateway.initialize();
+        try {
+            await gameGateway.initialize();
+        } catch (initErr) {
+            console.error("WARNING: Game Gateway Initialization failed (Server will start anyway):", initErr);
+        }
 
         const server = httpServer.listen(PORT, () => {
             console.log(`Server is running on http://localhost:${PORT}`);
@@ -142,9 +146,22 @@ const bootstrap = async () => {
         server.headersTimeout = 66000; // 66 seconds
     } catch (error) {
         console.error("Failed to start server:", error);
+        // Do NOT exit, let it try to run without DB if possible (or restart manually)
+        // But for DB critical apps, exit IS better.
+        // However, let's log more info.
         process.exit(1);
     }
 };
+
+// Global Error Handlers to prevent crash
+process.on('uncaughtException', (err) => {
+    console.error('UNCAUGHT EXCEPTION:', err);
+    // process.exit(1); // Optional: Restart on fatal
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('UNHANDLED REJECTION:', reason);
+});
 
 bootstrap();
 
