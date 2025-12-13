@@ -624,7 +624,8 @@ export class GameEngine {
             player.skippedTurns = 2; // Fixed 2 turns
             const expenses = player.expenses;
             player.cash -= expenses;
-            this.endTurn(); // Auto end for now
+            this.state.log.push(`📉 ${player.name} Downsized! Paid expenses $${expenses} and skips 2 turns.`);
+            // Do NOT end turn automatically. Let user see the popup.
         } else if (square.type === 'CHARITY') {
             this.state.phase = 'CHARITY_CHOICE';
             this.state.log.push(`❤️ Charity: Donate 10% of total income to roll extra dice?`);
