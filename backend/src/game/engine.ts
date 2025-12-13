@@ -1104,12 +1104,13 @@ export class GameEngine {
             return;
         }
 
+        let mlmResult = undefined;
+
         // MLM Logic (Subtype check)
         if (card.subtype === 'MLM_ROLL') {
             // Roll dice to determine partners
             const partners = Math.floor(Math.random() * 6) + 1; // 1-6
             // Calculate cashflow
-            // Formula: Cost 200 -> Per partner 100 which is 0.5 ratio
             const cashflowPerPartner = (card.cost || 0) * 0.5;
             const totalCashflow = partners * cashflowPerPartner;
 
@@ -1118,33 +1119,10 @@ export class GameEngine {
             card.title = `${card.title} (${partners} Partners)`;
 
             this.state.log.push(`🎲 Rolled ${partners}! Recruited ${partners} partners.`);
-
-            player.cash -= costToPay;
-
-            // Add Asset
-            player.assets.push({
-                title: card.title,
-                cost: card.cost,
-                cashflow: card.cashflow || 0,
-                symbol: card.symbol,
-                type: card.symbol ? 'STOCK' : 'REAL_ESTATE',
-                quantity: 1,
-                businessType: card.businessType // Store business type
-            });
-
-            // Update Stats
-            if (card.cashflow) {
-                player.passiveIncome += card.cashflow;
-                player.income = player.salary + player.passiveIncome;
-                player.cashflow = player.income - player.expenses;
-            }
-
-            // Clear card
-            this.state.currentCard = undefined;
-            this.state.phase = 'ACTION';
-
-            return { mlmRoll: partners, mlmCashflow: totalCashflow };
+            mlmResult = { mlmRoll: partners, mlmCashflow: totalCashflow };
         }
+
+        player.cash -= costToPay;
 
         // Handle Expense Payment (No Asset added)
         if (card.type === 'EXPENSE') {
@@ -1186,6 +1164,8 @@ export class GameEngine {
         this.checkFastTrackCondition(player);
         // Do NOT end turn. Allow player to continue actions.
         this.state.phase = 'ACTION';
+
+        return mlmResult;
     }
 
     sellStock(playerId: string, quantity: number) {

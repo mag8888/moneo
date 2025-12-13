@@ -168,7 +168,6 @@ const generateBigDeals = (): Card[] => {
             description: `Дом под сдачу. Цена $${cost}. Доход $${cashflow}.`,
             cost: cost,
             cashflow: cashflow,
-            downPayment: 0
         });
     }
 
@@ -201,6 +200,7 @@ export class CardManager {
         this.smallDeals = this.shuffle(generateSmallDeals());
         this.bigDeals = this.shuffle(generateBigDeals());
         this.marketDeck = this.shuffle(generateMarketCards());
+        this.expenseDeck = this.shuffle([...EXPENSE_CARDS]);
     }
 
     drawSmallDeal(): Card | undefined {
@@ -253,7 +253,7 @@ export class CardManager {
     }
 
     drawExpense(): Card {
-        if (this.expenseDeck.length === 0) this.expenseDeck = [...EXPENSE_CARDS];
+        if (this.expenseDeck.length === 0) this.expenseDeck = this.shuffle([...EXPENSE_CARDS]);
         const card = this.expenseDeck.shift();
         return card!;
     }
