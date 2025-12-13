@@ -923,6 +923,7 @@ export class GameEngine {
         const asset = player.assets[assetIndex];
 
         // Process Sale
+        const oldCash = player.cash;
         player.cash += card.offerPrice;
 
         // Remove Asset
@@ -950,7 +951,15 @@ export class GameEngine {
             this.state.log.push(`💸 Paid off mortgage $${mortgage.value}`);
         }
 
-        this.state.log.push(`🤝 SOLD ${asset.title} for $${card.offerPrice}.`);
+        this.recordTransaction({
+            from: 'Market',
+            to: player.name,
+            amount: card.offerPrice,
+            description: `Sold ${asset.title}`,
+            type: 'PAYDAY' // Use Payday type or Generic Income? Maybe new type 'SALE'? Reusing PAYDAY for Green Color in UI usually. Or 'TRANSFER'.
+        });
+
+        this.state.log.push(`🤝 ${player.name} SOLD ${asset.title} for $${card.offerPrice}. (Cash: ${oldCash} -> ${player.cash})`);
 
         // Clear card
         this.state.currentCard = undefined;
