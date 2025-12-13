@@ -7,7 +7,7 @@ export interface GameState {
     players: PlayerState[];
     currentPlayerIndex: number;
     currentTurnTime: number;
-    phase: 'ROLL' | 'ACTION' | 'END' | 'OPPORTUNITY_CHOICE';
+    phase: 'ROLL' | 'ACTION' | 'END' | 'OPPORTUNITY_CHOICE' | 'CHARITY_CHOICE';
     board: BoardSquare[];
     currentCard?: Card;
     log: string[];
@@ -42,6 +42,7 @@ export interface PlayerState extends IPlayer {
     salary: number;
     passiveIncome: number;
     skippedTurns: number;
+    charityTurns: number; // Turns remaining for extra dice
 }
 
 export interface BoardSquare {
@@ -232,7 +233,8 @@ export class GameEngine {
             income: profession.salary,
             expenses: profession.expenses,
             cashflow: profession.salary - profession.expenses,
-            skippedTurns: 0
+            skippedTurns: 0,
+            charityTurns: 0
         };
     }
 
@@ -251,12 +253,13 @@ export class GameEngine {
             // Transition
             player.isFastTrack = true;
             player.position = 0; // Reset to start of Outer Track
+            player.charityTurns = 0; // Reset charity status on entry
             player.cash += 100000; // Bonus for exiting?
             this.state.log.push(`🚀 ${player.name} ENTERED FAST TRACK!`);
         }
     }
 
-    rollDice(): number {
+    rollDice(diceCount: number = 1): number {
         const player = this.state.players[this.state.currentPlayerIndex];
 
         if (player.skippedTurns > 0) {
@@ -266,9 +269,45 @@ export class GameEngine {
             return 0;
         }
 
-        const roll1 = Math.floor(Math.random() * 6) + 1;
-        // const roll2 = Math.floor(Math.random() * 6) + 1; 
-        const total = roll1;
+        // Validate dice count
+        let validCount = 1;
+        if (player.isFastTrack) validCount = 2; // Default 2 for FT
+
+        // Charity Bonus (Overrides default limitation if active)
+        if (player.charityTurns > 0) {
+            // Rat Race: Can roll 1 or 2.
+            // Fast Track: Can roll 1, 2, or 3? (User said 1-3)
+            // We trust the `diceCount` requested if within limits.
+            const maxDice = player.isFastTrack ? 3 : 2;
+            if (diceCount >= 1 && diceCount <= maxDice) {
+                validCount = diceCount;
+            } else {
+                // Fallback to max allowed if requested more/less weirdly
+                validCount = maxDice; // Or default? Let's assume UI sends correct. 
+                // If UI sends 1, validCount becomes 1.
+                if (diceCount > 0 && diceCount <= maxDice) validCount = diceCount;
+            }
+            player.charityTurns--; // Use up a charity turn
+        } else {
+            // Normal Rules
+            // Rat Race: 1 Die (Fixed)
+            // Fast Track: 2 Dice (Fixed usually, or 1? Standard FT is 2 dice always? 
+            // Actually rules say you can choose. But simplistic is 1 for RR, 2 for FT. 
+            // If user forces 1 on FT without charity -> OK.
+            // Let's stick to: RR=1, FT=2.
+            if (player.isFastTrack) validCount = 2;
+            else validCount = 1;
+        }
+
+        let total = 0;
+        const rolls = [];
+        for (let i = 0; i < validCount; i++) {
+            const r = Math.floor(Math.random() * 6) + 1;
+            rolls.push(r);
+            total += r;
+        }
+
+        this.state.log.push(`${player.name} rolled ${rolls.join('+')} = ${total}`);
 
         // Phase check? 
         if (this.state.phase !== 'ROLL') return 0; // Prevent double roll
@@ -389,41 +428,39 @@ export class GameEngine {
 
             case 'BUSINESS':
             case 'DREAM':
-                // Auto-buy logic for simplicity or prompts?
-                // Fast Track moves fast. Let's auto-buy if affordable, else skip.
-                if (square.cost && player.cash >= square.cost) {
-                    player.cash -= square.cost;
-                    // Dreams don't usually add cashflow, but Businesses do.
-                    if (square.cashflow) {
-                        player.cashflow += square.cashflow;
-                        player.income += square.cashflow;
-                        player.passiveIncome += square.cashflow;
-                        player.assets.push({ title: square.name, cost: square.cost, cashflow: square.cashflow });
-                        this.state.log.push(`✅ Bought ${square.name} for $${square.cost}. Flow +$${square.cashflow}`);
-                    } else {
-                        // Dream bought
-                        this.state.log.push(`✨ Bought DREAM: ${square.name} for $${square.cost}!`);
-                        // If this was their selected dream, they win. (Not implemented selection yet)
-                        // For now just buying dreams is status.
-                    }
-                } else if (square.cost) {
-                    this.state.log.push(`❌ Cannot afford ${square.name} ($${square.cost})`);
-                }
+                // Manual Buy Option (User Request)
+                // Construct a temporary card for the UI action
+                this.state.currentCard = {
+                    id: `ft_${square.index}`,
+                    type: square.type, // 'BUSINESS' or 'DREAM'
+                    title: square.name,
+                    description: square.description || '',
+                    cost: square.cost,
+                    cashflow: square.cashflow,
+                    mandatory: false
+                } as Card;
+
+                this.state.phase = 'ACTION';
+                this.state.log.push(`Found ${square.type}: ${square.name}. Cost $${square.cost}`);
                 break;
 
             case 'LOSS':
                 this.handleFastTrackLoss(player, square);
+                this.endTurn(); // LOSS ends turn usually? Or immediate effect then end.
+                // handleFastTrackLoss doesn't end turn. But we should.
+                // Assuming LOSS doesn't require player input (manual OK button?).
+                // Current UI doesn't support generic OK for LOSS. 
+                // Let's just end turn to keep it auto.
+                // Wait, users might want to see what happened.
+                // Let's rely on standard endTurn flow if handled.
+                // But handleFastTrackLoss just modifies state.
+                this.endTurn();
                 break;
 
             case 'CHARITY':
-                // Donate 10% or fixed? User List just sais "Charity".
-                // Usually pays 10% of cash for roll bonus. 
-                // Implementing simple payment for now.
-                const donation = 100000; // Mock amount or 10%?
-                if (player.cash >= donation) {
-                    player.cash -= donation;
-                    this.state.log.push(`❤️ Donated $${donation} to Charity.`);
-                }
+                // Prompt for Donation
+                this.state.phase = 'CHARITY_CHOICE';
+                this.state.log.push(`❤️ Charity Opportunity! Donate to gain dice bonus.`);
                 break;
 
             case 'STOCK_EXCHANGE':
@@ -434,41 +471,29 @@ export class GameEngine {
                 } else {
                     this.state.log.push(`📉 Stock Exchange: Rolled ${roll}. No profit.`);
                 }
+                this.endTurn();
                 break;
 
             case 'LOTTERY':
-                // "Выпадет любая сделка внешнего круга" -> Gives a Fast Track BUSINESS for FREE
-                const eligibleSquares = FAST_TRACK_SQUARES.filter(sq => sq.type === 'BUSINESS');
+                // "Выпадет любая сделка внешнего круга"
+                // Logic: Pick a random square and TRIGGER it as if landed.
+                const eligibleSquares = FAST_TRACK_SQUARES.filter(sq => ['BUSINESS', 'DREAM', 'LOSS', 'PAYDAY'].includes(sq.type));
+                // Note: User said "Any deal... expense (mandatory), business/dream (buy opportunity)".
+                // 'LOSS' covers expenses/negative events. 'BUSINESS'/'DREAM'.
+                // 'PAYDAY' is free money.
+
                 const randomSquare = eligibleSquares[Math.floor(Math.random() * eligibleSquares.length)];
 
-                // Give for Free!
-                player.passiveIncome += (randomSquare.cashflow || 0);
-                // Should we increase income too? Fast track income = passive income.
-                // In Fast Track logic, usually cashflow is the main metric.
-                player.income = player.salary + player.passiveIncome;
-                player.cashflow = player.income - player.expenses;
+                this.state.log.push(`🎰 LOTTERY: Rolled... ${randomSquare.name}!`);
 
-                // Add Asset
-                player.assets.push({
-                    title: randomSquare.name,
-                    cost: randomSquare.cost, // Keep value reference
-                    cashflow: randomSquare.cashflow
-                });
+                // Recursively handle the new square
+                // Pass the square object directly
+                this.handleFastTrackSquare(player, randomSquare);
 
-                this.state.log.push(`🎰 LOTTERY WINNER! Won ${randomSquare.name} (Value $${randomSquare.cost}) for FREE!`);
-                this.state.lastEvent = {
-                    type: 'LOTTERY_WIN',
-                    payload: {
-                        player: player.name,
-                        card: {
-                            type: randomSquare.type,
-                            title: randomSquare.name,
-                            cost: randomSquare.cost,
-                            cashflow: randomSquare.cashflow,
-                            description: randomSquare.description || 'Won in Lottery'
-                        }
-                    }
-                };
+                // IMPORTANT: The recursive call will handle phase/events. 
+                // We should NOT endTurn here if the recursive call sets phase to ACTION.
+                // If recursive call was immediate (PAYDAY/LOSS), it likely didn't endTurn either (except my LOSS change above).
+                // If BUSINESS, phase is ACTION.
                 break;
         }
     }
@@ -578,7 +603,8 @@ export class GameEngine {
             player.skippedTurns = 2; // Lose 2 turns
             this.state.log.push(`🚫 DOWNSIZED! Paid -$${expenses} and skip 2 turns.`);
         } else if (square.type === 'CHARITY') {
-            this.state.log.push(`Charity opportunity (Not Impl).`);
+            this.state.phase = 'CHARITY_CHOICE';
+            this.state.log.push(`❤️ Charity: Donate 10% of total income to roll extra dice?`);
         }
     }
 
@@ -776,12 +802,44 @@ export class GameEngine {
         this.endTurn();
     }
 
+    donateCharity(playerId: string) {
+        const player = this.state.players.find(p => p.id === playerId);
+        if (!player) return;
+
+        let amount = 0;
+        if (player.isFastTrack) {
+            amount = 100000;
+        } else {
+            amount = Math.floor(player.income * 0.1);
+        }
+
+        if (player.cash < amount) {
+            this.state.log.push(`⚠️ Cannot afford Charity donation ($${amount}).`);
+            return;
+        }
+
+        player.cash -= amount;
+        player.charityTurns = 3; // 3 turns of extra dice
+        this.state.log.push(`❤️ ${player.name} donated $${amount}. Can now roll extra dice for 3 turns!`);
+
+        this.state.phase = 'ROLL'; // Re-enable roll? No, Charity replaces turn action usually?
+        // Wait, rule: "Land on Charity -> Donate -> End Turn. Next turns you roll extra."
+        // Or "Donate -> Roll"? 
+        // Standard: Land on Charity -> Donate (Optional) -> End Turn.
+        this.endTurn();
+    }
+
+    skipCharity(playerId: string) {
+        this.state.log.push(`${this.state.players.find(p => p.id === playerId)?.name} declined Charity.`);
+        this.endTurn();
+    }
+
     buyAsset(playerId: string) {
         const player = this.state.players.find(p => p.id === playerId);
         const card = this.state.currentCard;
 
         if (!player || !card) return;
-        if (card.type !== 'MARKET' && card.type !== 'DEAL_SMALL' && card.type !== 'DEAL_BIG') return;
+        if (card.type !== 'MARKET' && card.type !== 'DEAL_SMALL' && card.type !== 'DEAL_BIG' && card.type !== 'BUSINESS' && card.type !== 'DREAM') return;
 
         // Determine cost (Use Down Payment if available, else full cost)
         const costToPay = card.downPayment !== undefined ? card.downPayment : (card.cost || 0);

@@ -197,12 +197,32 @@ export class GameGateway {
                 this.roomService.saveGameState(roomId, game.getState()).catch(err => console.error("Persist Error:", err));
             };
 
-            socket.on('roll_dice', ({ roomId }) => {
+            socket.on('roll_dice', ({ roomId, diceCount }) => {
                 const game = this.games.get(roomId);
                 if (game) {
-                    const roll = game.rollDice();
+                    const roll = game.rollDice(diceCount);
                     const state = game.getState();
                     this.io.to(roomId).emit('dice_rolled', { roll, state });
+                    saveState(roomId, game);
+                }
+            });
+
+            socket.on('donate_charity', ({ roomId }) => {
+                const game = this.games.get(roomId);
+                if (game) {
+                    game.donateCharity(socket.id);
+                    const state = game.getState();
+                    this.io.to(roomId).emit('state_updated', { state });
+                    saveState(roomId, game);
+                }
+            });
+
+            socket.on('skip_charity', ({ roomId }) => {
+                const game = this.games.get(roomId);
+                if (game) {
+                    game.skipCharity(socket.id);
+                    const state = game.getState();
+                    this.io.to(roomId).emit('state_updated', { state }); // Or turn_ended if it ends turn
                     saveState(roomId, game);
                 }
             });

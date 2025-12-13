@@ -1,7 +1,7 @@
 // Card Types
 export interface Card {
     id: string;
-    type: 'MARKET' | 'EXPENSE' | 'DEAL_SMALL' | 'DEAL_BIG';
+    type: 'MARKET' | 'EXPENSE' | 'DEAL_SMALL' | 'DEAL_BIG' | 'BUSINESS' | 'DREAM';
     title: string;
     description: string;
     cost?: number; // Cost to buy or Pay

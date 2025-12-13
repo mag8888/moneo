@@ -117,8 +117,8 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
         }
     }, [state.lastEvent]);
 
-    const handleRoll = () => {
-        socket.emit('roll_dice', { roomId });
+    const handleRoll = (diceCount?: number) => {
+        socket.emit('roll_dice', { roomId, diceCount });
         setHasRolled(true);
     };
 
@@ -631,12 +631,36 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                                                         </button>
                                                     </div>
                                                 ))
-                                    ) : <div className="w-full text-center text-slate-500 text-sm animate-pulse bg-slate-900/50 p-3 rounded-xl border border-slate-800">⏳ Ожидание игрока...</div>}
+                                        ) : <div className="w-full text-center text-slate-500 text-sm animate-pulse bg-slate-900/50 p-3 rounded-xl border border-slate-800">⏳ Ожидание игрока...</div>}
                                     </div>
                                 </div>
                             </div>
                         )}
                     </div>
+
+
+                    {/* Charity Overlay */}
+                    {state.phase === 'CHARITY_CHOICE' && isMyTurn && (
+                        <div className="absolute inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in zoom-in duration-200">
+                            <div className="bg-[#1e293b] w-full max-w-sm p-6 rounded-3xl border border-slate-700 shadow-2xl relative text-center">
+                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 to-red-500"></div>
+                                <div className="text-5xl mb-4">❤️</div>
+                                <h2 className="text-xl font-bold text-white mb-2">Благотворительность</h2>
+                                <p className="text-slate-400 text-sm mb-6">
+                                    Пожертвуйте {me.isFastTrack ? '$100,000' : '10% от общего дохода'}, чтобы получить возможность выбирать 1, 2 или 3 кубика на следующие 3 хода.
+                                </p>
+
+                                <div className="flex gap-2 w-full">
+                                    <button onClick={() => socket.emit('donate_charity', { roomId })} className="flex-1 bg-pink-600 hover:bg-pink-500 text-white font-bold py-3 rounded-xl text-sm shadow-lg shadow-pink-900/20 transform hover:-translate-y-0.5 transition-all">
+                                        Пожертвовать
+                                    </button>
+                                    <button onClick={() => socket.emit('skip_charity', { roomId })} className="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 rounded-xl text-sm transform hover:-translate-y-0.5 transition-all">
+                                        Отказаться
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* RIGHT SIDEBAR (Desktop) */}
@@ -662,19 +686,41 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                         </h3>
 
                         <div className="grid grid-cols-2 gap-4 mb-4 relative z-10">
-                            <button
-                                onClick={handleRoll}
-                                disabled={!isMyTurn || state.phase !== 'ROLL' || !!state.currentCard || hasRolled}
-                                className={`h-[100px] rounded-2xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 relative overflow-hidden
-                                ${isMyTurn && state.phase === 'ROLL' && !state.currentCard && !hasRolled
-                                        ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 border-emerald-400/50 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] hover:-translate-y-1 active:scale-95 active:translate-y-0 cursor-pointer'
-                                        : 'bg-slate-800/40 border-slate-700/50 text-slate-600 cursor-not-allowed contrast-50 grayscale'
-                                    } `}
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
-                                <span className={`text-3xl filter drop-shadow-xl transition-transform duration-500 ${!hasRolled && isMyTurn ? 'group-hover:rotate-[360deg]' : ''}`}>🎲</span>
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em] relative z-10">Бросок</span>
-                            </button>
+                            {me.charityTurns > 0 && isMyTurn && state.phase === 'ROLL' && !hasRolled ? (
+                                <div className="h-[100px] rounded-2xl border border-slate-700/50 bg-slate-800/40 p-2 flex flex-col gap-1 shadow-inner">
+                                    <div className="flex-1 flex gap-1">
+                                        <button onClick={() => handleRoll(1)} className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg flex flex-col items-center justify-center shadow-lg transition-all active:scale-95">
+                                            <span className="text-xl">🎲</span>
+                                            <span className="text-[8px] font-bold">1</span>
+                                        </button>
+                                        <button onClick={() => handleRoll(2)} className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg flex flex-col items-center justify-center shadow-lg transition-all active:scale-95">
+                                            <span className="text-xl">🎲🎲</span>
+                                            <span className="text-[8px] font-bold">2</span>
+                                        </button>
+                                        {me.isFastTrack && (
+                                            <button onClick={() => handleRoll(3)} className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg flex flex-col items-center justify-center shadow-lg transition-all active:scale-95">
+                                                <span className="text-xl">🎲 x3</span>
+                                                <span className="text-[8px] font-bold">3</span>
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="text-[8px] text-center text-pink-400 font-bold uppercase tracking-wider">Charity Bonus ({me.charityTurns})</div>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => handleRoll()}
+                                    disabled={!isMyTurn || state.phase !== 'ROLL' || !!state.currentCard || hasRolled}
+                                    className={`h-[100px] rounded-2xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 relative overflow-hidden
+                                    ${isMyTurn && state.phase === 'ROLL' && !state.currentCard && !hasRolled
+                                            ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 border-emerald-400/50 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] hover:-translate-y-1 active:scale-95 active:translate-y-0 cursor-pointer'
+                                            : 'bg-slate-800/40 border-slate-700/50 text-slate-600 cursor-not-allowed contrast-50 grayscale'
+                                        } `}
+                                >
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
+                                    <span className={`text-3xl filter drop-shadow-xl transition-transform duration-500 ${!hasRolled && isMyTurn ? 'group-hover:rotate-[360deg]' : ''}`}>🎲</span>
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] relative z-10">Бросок</span>
+                                </button>
+                            )}
                             <button
                                 onClick={handleEndTurn}
                                 disabled={!isMyTurn || (state.phase === 'ROLL' && !state.currentCard && !hasRolled)}
@@ -756,7 +802,7 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                     </button>
 
                     <button
-                        onClick={handleRoll}
+                        onClick={() => handleRoll()}
                         disabled={!isMyTurn || state.phase !== 'ROLL' || !!state.currentCard || hasRolled}
                         className={`flex-1 h-12 rounded-xl flex items-center justify-center gap-2 font-black text-xs uppercase tracking-widest shadow-lg transition-all relative overflow-hidden group
                               ${isMyTurn && state.phase === 'ROLL' && !state.currentCard && !hasRolled
