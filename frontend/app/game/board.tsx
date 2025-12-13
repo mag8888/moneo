@@ -700,7 +700,7 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                     </div>
 
                     {/* Actions Panel */}
-                    <div className="bg-[#1e293b]/80 backdrop-blur-xl rounded-3xl p-6 border border-slate-700/50 shadow-2xl relative overflow-hidden group">
+                    <div className="bg-[#1e293b]/80 backdrop-blur-xl rounded-3xl p-5 border border-slate-700/50 shadow-2xl relative group">
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
                         <h3 className="text-slate-400 text-[10px] uppercase tracking-[0.25em] font-black mb-5 flex items-center gap-2 relative z-10">
                             <span className="text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]">⚡</span> ДЕЙСТВИЯ
@@ -731,7 +731,7 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                                 <button
                                     onClick={() => handleRoll()}
                                     disabled={!isMyTurn || state.phase !== 'ROLL' || !!state.currentCard || hasRolled}
-                                    className={`h-[100px] rounded-2xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 relative overflow-hidden
+                                    className={`h-24 rounded-2xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 relative overflow-hidden
                                     ${isMyTurn && state.phase === 'ROLL' && !state.currentCard && !hasRolled
                                             ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 border-emerald-400/50 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] hover:-translate-y-1 active:scale-95 active:translate-y-0 cursor-pointer'
                                             : 'bg-slate-800/40 border-slate-700/50 text-slate-600 cursor-not-allowed contrast-50 grayscale'
@@ -745,7 +745,7 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                             <button
                                 onClick={handleEndTurn}
                                 disabled={!isMyTurn || (state.phase === 'ROLL' && !state.currentCard && !hasRolled)}
-                                className={`h-[100px] rounded-2xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 relative overflow-hidden
+                                className={`h-24 rounded-2xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 relative overflow-hidden
                                 ${isMyTurn && (state.phase !== 'ROLL' || !!state.currentCard || hasRolled)
                                         ? 'bg-gradient-to-br from-blue-500 to-blue-700 border-blue-400/50 text-white shadow-[0_0_20px_rgba(59,130,246,0.4)] hover:shadow-[0_0_30px_rgba(59,130,246,0.6)] hover:-translate-y-1 active:scale-95 active:translate-y-0 cursor-pointer'
                                         : 'bg-slate-800/40 border-slate-700/50 text-slate-600 cursor-not-allowed contrast-50 grayscale'
