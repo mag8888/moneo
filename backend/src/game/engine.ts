@@ -57,30 +57,30 @@ export interface BoardSquare {
 
 // Mock Board Configuration (Rat Race - 24 Squares)
 export const RAT_RACE_SQUARES: BoardSquare[] = [
-    { index: 0, type: 'DEAL', name: 'Opportunity' },
-    { index: 1, type: 'EXPENSE', name: 'Doodad' },
-    { index: 2, type: 'DEAL', name: 'Opportunity' },
-    { index: 3, type: 'CHARITY', name: 'Charity' },
-    { index: 4, type: 'DEAL', name: 'Opportunity' },
-    { index: 5, type: 'PAYDAY', name: 'Payday' },
-    { index: 6, type: 'DEAL', name: 'Opportunity' },
-    { index: 7, type: 'MARKET', name: 'Market' },
-    { index: 8, type: 'DEAL', name: 'Opportunity' },
-    { index: 9, type: 'EXPENSE', name: 'Doodad' },
-    { index: 10, type: 'DEAL', name: 'Opportunity' },
-    { index: 11, type: 'BABY', name: 'Baby' },
-    { index: 12, type: 'DEAL', name: 'Opportunity' },
-    { index: 13, type: 'PAYDAY', name: 'Payday' },
-    { index: 14, type: 'DEAL', name: 'Opportunity' },
-    { index: 15, type: 'MARKET', name: 'Market' },
-    { index: 16, type: 'DEAL', name: 'Opportunity' },
-    { index: 17, type: 'EXPENSE', name: 'Doodad' },
-    { index: 18, type: 'DEAL', name: 'Opportunity' },
-    { index: 19, type: 'DOWNSIZED', name: 'Downsized' },
-    { index: 20, type: 'DEAL', name: 'Opportunity' },
-    { index: 21, type: 'PAYDAY', name: 'Payday' },
-    { index: 22, type: 'DEAL', name: 'Opportunity' },
-    { index: 23, type: 'MARKET', name: 'Market' },
+    { index: 0, type: 'DEAL', name: 'Opportunity', description: 'Возможность: Малая или Крупная сделка.' },
+    { index: 1, type: 'EXPENSE', name: 'Doodad', description: 'Трата: Ненужные расходы.' },
+    { index: 2, type: 'DEAL', name: 'Opportunity', description: 'Возможность: Малая или Крупная сделка.' },
+    { index: 3, type: 'CHARITY', name: 'Charity', description: 'Благотворительность: Пожертвуйте 10% дохода для ускорения.' },
+    { index: 4, type: 'DEAL', name: 'Opportunity', description: 'Возможность: Малая или Крупная сделка.' },
+    { index: 5, type: 'PAYDAY', name: 'Payday', description: 'Деньги: Получите ваш месячный денежный поток.' },
+    { index: 6, type: 'DEAL', name: 'Opportunity', description: 'Возможность: Малая или Крупная сделка.' },
+    { index: 7, type: 'MARKET', name: 'Market', description: 'Рынок: Возможность продать активы.' },
+    { index: 8, type: 'DEAL', name: 'Opportunity', description: 'Возможность: Малая или Крупная сделка.' },
+    { index: 9, type: 'EXPENSE', name: 'Doodad', description: 'Трата: Ненужные расходы.' },
+    { index: 10, type: 'DEAL', name: 'Opportunity', description: 'Возможность: Малая или Крупная сделка.' },
+    { index: 11, type: 'BABY', name: 'Baby', description: 'Ребенок: Новые расходы и радость в семье.' },
+    { index: 12, type: 'DEAL', name: 'Opportunity', description: 'Возможность: Малая или Крупная сделка.' },
+    { index: 13, type: 'PAYDAY', name: 'Payday', description: 'Деньги: Получите ваш месячный денежный поток.' },
+    { index: 14, type: 'DEAL', name: 'Opportunity', description: 'Возможность: Малая или Крупная сделка.' },
+    { index: 15, type: 'MARKET', name: 'Market', description: 'Рынок: Возможность продать активы.' },
+    { index: 16, type: 'DEAL', name: 'Opportunity', description: 'Возможность: Малая или Крупная сделка.' },
+    { index: 17, type: 'EXPENSE', name: 'Doodad', description: 'Трата: Ненужные расходы.' },
+    { index: 18, type: 'DEAL', name: 'Opportunity', description: 'Возможность: Малая или Крупная сделка.' },
+    { index: 19, type: 'DOWNSIZED', name: 'Downsized', description: 'Увольнение: Пропуск 2 ходов и оплата расходов.' },
+    { index: 20, type: 'DEAL', name: 'Opportunity', description: 'Возможность: Малая или Крупная сделка.' },
+    { index: 21, type: 'PAYDAY', name: 'Payday', description: 'Деньги: Получите ваш месячный денежный поток.' },
+    { index: 22, type: 'DEAL', name: 'Opportunity', description: 'Возможность: Малая или Крупная сделка.' },
+    { index: 23, type: 'MARKET', name: 'Market', description: 'Рынок: Возможность продать активы.' },
 ];
 
 // 47 Items from User List (Mapped to Global Indices 24-70)
@@ -94,9 +94,9 @@ export const FAST_TRACK_SQUARES: BoardSquare[] = [
     // 4 (27) Loss (Audit)
     { index: 27, type: 'LOSS', name: 'Аудит', description: 'Налоговая проверка. Вы теряете 50% наличных.', action: 'AUDIT' },
     // 5 (28) Business
-    { index: 28, type: 'BUSINESS', name: 'Центр здоровья и спа', cost: 270000, cashflow: 5000 },
+    { index: 28, type: 'BUSINESS', name: 'Центр здоровья и спа', cost: 270000, cashflow: 5000, description: 'Элитный спа-комплекс.' },
     // 6 (29) Dream
-    { index: 29, type: 'DREAM', name: 'Посетить Антарктиду', cost: 150000 },
+    { index: 29, type: 'DREAM', name: 'Посетить Антарктиду', cost: 150000, description: 'Экспедиция к Южному полюсу.' },
     // 7 (30) Business
     { index: 30, type: 'BUSINESS', name: 'Мобильное приложение', cost: 420000, cashflow: 10000, description: 'Сервис по подписке' },
     // 8 (31) Charity
@@ -150,13 +150,13 @@ export const FAST_TRACK_SQUARES: BoardSquare[] = [
     // 32
     { index: 55, type: 'DREAM', name: 'Частный самолёт', cost: 1000000, description: 'Купить частный самолёт' },
     // 33
-    { index: 56, type: 'BUSINESS', name: 'NFT-платформа', cost: 400000, cashflow: 12000 },
+    { index: 56, type: 'BUSINESS', name: 'NFT-платформа', cost: 400000, cashflow: 12000, description: 'Платформа для торговли цифровым искусством.' },
     // 34
     { index: 57, type: 'PAYDAY', name: 'CASHFLOW Day', description: 'Вам выплачивается доход от ваших инвестиций' },
     // 35
     { index: 58, type: 'BUSINESS', name: 'Школа языков', cost: 20000, cashflow: 3000, description: 'Школа иностранных языков' },
     // 36
-    { index: 59, type: 'DREAM', name: 'Коллекция суперкаров', cost: 1000000 },
+    { index: 59, type: 'DREAM', name: 'Коллекция суперкаров', cost: 1000000, description: 'Гараж с редкими автомобилями.' },
     // 37
     { index: 60, type: 'BUSINESS', name: 'Школа будущего', cost: 300000, cashflow: 10000, description: 'Создать школу будущего для детей' },
     // 38
@@ -168,11 +168,11 @@ export const FAST_TRACK_SQUARES: BoardSquare[] = [
     // 41
     { index: 64, type: 'BUSINESS', name: 'Автомойки', cost: 120000, cashflow: 3500, description: 'Сеть автомоек самообслуживания' },
     // 42
-    { index: 65, type: 'DREAM', name: 'Белоснежная Яхта', cost: 300000 },
+    { index: 65, type: 'DREAM', name: 'Белоснежная Яхта', cost: 300000, description: 'Роскошная яхта для путешествий.' },
     // 43
     { index: 66, type: 'BUSINESS', name: 'Франшиза', cost: 100000, cashflow: 10000, description: 'Франшиза "Поток денег"' },
     // 44
-    { index: 67, type: 'DREAM', name: 'Полёт в космос', cost: 250000 },
+    { index: 67, type: 'DREAM', name: 'Полёт в космос', cost: 250000, description: 'Туристический полет на орбиту.' },
     // 45
     { index: 68, type: 'BUSINESS', name: 'Пекарня', cost: 300000, cashflow: 7000, description: 'Пекарня с доставкой' },
     // 46

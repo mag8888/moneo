@@ -410,25 +410,39 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                         <h3 className="text-2xl font-black text-white uppercase tracking-wider mb-2">{squareInfo.name || squareInfo.type}</h3>
 
                         <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800 mb-6 flex flex-col gap-2">
-                            {/* Cost */}
-                            {squareInfo.cost !== undefined && squareInfo.cost !== null && (
-                                <div className="flex justify-between items-center border-b border-slate-800/50 pb-2 last:border-0 last:pb-0">
-                                    <span className="text-xs text-slate-500 uppercase font-bold">Стоимость</span>
-                                    <span className="text-xl font-mono text-red-400 font-bold">-${squareInfo.cost.toLocaleString()}</span>
+                            {squareInfo.type === 'PAYDAY' ? (
+                                <div className="text-center py-2">
+                                    <div className="text-xs text-slate-500 uppercase font-bold mb-1">Ваш доход</div>
+                                    <div className="text-3xl font-mono text-green-400 font-bold p-2 bg-green-900/10 rounded-xl border border-green-500/20 shadow-lg shadow-green-900/20">
+                                        +${me.cashflow?.toLocaleString()}
+                                    </div>
+                                    <div className="text-slate-400 text-xs mt-2 italic">Начислено на баланс</div>
                                 </div>
-                            )}
+                            ) : (
+                                <>
+                                    {/* Cost */}
+                                    {squareInfo.cost !== undefined && squareInfo.cost !== null && (
+                                        <div className="flex justify-between items-center border-b border-slate-800/50 pb-2 last:border-0 last:pb-0">
+                                            <span className="text-xs text-slate-500 uppercase font-bold">Стоимость</span>
+                                            <span className="text-xl font-mono text-red-400 font-bold">-${squareInfo.cost.toLocaleString()}</span>
+                                        </div>
+                                    )}
 
-                            {/* Cashflow / Income */}
-                            {squareInfo.cashflow !== undefined && squareInfo.cashflow !== null && (
-                                <div className="flex justify-between items-center border-b border-slate-800/50 pb-2 last:border-0 last:pb-0">
-                                    <span className="text-xs text-slate-500 uppercase font-bold">Доход</span>
-                                    <span className="text-xl font-mono text-green-400 font-bold">+${squareInfo.cashflow.toLocaleString()}</span>
-                                </div>
-                            )}
+                                    {/* Cashflow / Income */}
+                                    {squareInfo.cashflow !== undefined && squareInfo.cashflow !== null && (
+                                        <div className="flex justify-between items-center border-b border-slate-800/50 pb-2 last:border-0 last:pb-0">
+                                            <span className="text-xs text-slate-500 uppercase font-bold">Доход</span>
+                                            <span className="text-xl font-mono text-green-400 font-bold">+${squareInfo.cashflow.toLocaleString()}</span>
+                                        </div>
+                                    )}
 
-                            {/* Fallback if neither */}
-                            {!squareInfo.cost && !squareInfo.cashflow && (
-                                <span className="text-slate-400 italic text-sm">Информация отсутствует</span>
+                                    {/* Fallback if neither */}
+                                    {!squareInfo.cost && !squareInfo.cashflow && (
+                                        <span className="text-slate-400 italic text-sm text-center block py-2">
+                                            {squareInfo.description ? 'Следуйте инструкциям на карточке' : 'Информация отсутствует'}
+                                        </span>
+                                    )}
+                                </>
                             )}
                         </div>
 
