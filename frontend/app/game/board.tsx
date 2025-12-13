@@ -428,7 +428,7 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                                     {/* Fallback if neither */}
                                     {!squareInfo.cost && !squareInfo.cashflow && (
                                         <div className="text-center">
-                                            {state.phase === 'OPPORTUNITY_CHOICE' && isMyTurn && squareInfo.type === 'DEAL' ? (
+                                            {isMyTurn && squareInfo.type === 'DEAL' ? (
                                                 <div className="flex gap-2 mt-4">
                                                     <button
                                                         onClick={() => socket.emit('draw_deal', { roomId, type: 'SMALL' })}
