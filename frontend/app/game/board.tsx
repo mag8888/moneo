@@ -179,7 +179,7 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
             // setPendingState(data.state); // Unused
 
             const DICE_DURATION = 2000;
-            const BUFFER = 500;
+            const BUFFER = 1200; // 1.2s delay after movement before showing card
 
             // Calculate total movement time based on roll
             const moveDuration = (data.roll || 0) * 500; // MOVE_PER_STEP matched with interval
@@ -825,7 +825,11 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
 
                                                         <div className="grid grid-cols-2 gap-2">
                                                             <button
-                                                                onClick={() => handleLoan(((state.currentCard.downPayment ?? state.currentCard.cost) || 0) - me.cash)}
+                                                                onClick={() => {
+                                                                    const deficit = ((state.currentCard.downPayment ?? state.currentCard.cost) || 0) - me.cash;
+                                                                    const loanAmount = Math.ceil(deficit / 1000) * 1000;
+                                                                    handleLoan(loanAmount);
+                                                                }}
                                                                 disabled={(me.loanDebt || 0) + (((state.currentCard.downPayment ?? state.currentCard.cost) || 0) - me.cash) > 38000}
                                                                 className="bg-yellow-600 hover:bg-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold py-3 rounded-xl shadow-lg shadow-yellow-900/20 flex flex-col items-center justify-center gap-1"
                                                             >
