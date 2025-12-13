@@ -644,15 +644,25 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                                         {state.currentCard.symbol ? (
                                             <div className="flex flex-col gap-2 w-full animate-in slide-in-from-bottom duration-300">
                                                 {/* Quantity Input */}
-                                                <div className="bg-slate-900/50 p-2 rounded-xl border border-slate-800 flex items-center gap-2">
-                                                    <span className="text-slate-400 text-xs font-bold uppercase ml-2">Кол-во:</span>
+                                                <div className="bg-slate-900/50 p-3 rounded-xl border border-slate-800 flex flex-col gap-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-slate-400 text-xs font-bold uppercase ml-2">Кол-во:</span>
+                                                        <input
+                                                            type="number"
+                                                            min="1"
+                                                            max="100000"
+                                                            value={stockQty}
+                                                            onChange={(e) => setStockQty(Math.max(1, parseInt(e.target.value) || 1))}
+                                                            className="flex-1 bg-transparent text-white font-mono font-bold text-lg outline-none text-right"
+                                                        />
+                                                    </div>
                                                     <input
-                                                        type="number"
+                                                        type="range"
                                                         min="1"
-                                                        max="100000"
+                                                        max={Math.max(50, Math.floor(me.cash / (state.currentCard.cost || 1)), me.assets.find((a: any) => a.symbol === state.currentCard.symbol)?.quantity || 0)}
                                                         value={stockQty}
-                                                        onChange={(e) => setStockQty(Math.max(1, parseInt(e.target.value) || 1))}
-                                                        className="flex-1 bg-transparent text-white font-mono font-bold text-lg outline-none text-right"
+                                                        onChange={(e) => setStockQty(Number(e.target.value))}
+                                                        className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500 hover:accent-blue-400 transition-all"
                                                     />
                                                 </div>
 
