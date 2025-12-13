@@ -627,19 +627,33 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                 <div className="flex-1 relative bg-[#0f172a] overflow-hidden flex flex-col rounded-3xl border border-slate-800/50 shadow-2xl">
                     {/* Mobile Top Bar */}
                     <div className="lg:hidden flex justify-between items-center p-3 bg-[#0B0E14] border-b border-slate-800 z-10 shadow-md">
-                        <div className="flex items-center gap-2">
-                            <span className="text-2xl bg-slate-800 w-8 h-8 flex items-center justify-center rounded-full border border-slate-700">{me.token}</span>
-                            <div className="flex flex-col leading-none relative">
-                                <span className="font-bold text-slate-200 text-sm">{me.name}</span>
-                                <span className="font-mono text-green-400 text-xs font-bold relative">
+                        <div className="flex items-center gap-3">
+                            <span className="text-2xl bg-slate-800 w-9 h-9 flex items-center justify-center rounded-full border border-slate-700 shadow-sm">{me.token}</span>
+                            <div className="flex flex-col leading-tight">
+                                <span className="font-bold text-slate-200 text-sm truncate max-w-[100px]">{me.name}</span>
+                                <span className="font-mono text-green-400 text-xs font-bold relative flex items-center gap-1">
                                     ${me.cash?.toLocaleString()}
                                     <CashChangeIndicator currentCash={me.cash} />
                                 </span>
                             </div>
                         </div>
-                        <div className="text-center">
-                            <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Turn</div>
-                            <div className={`text - sm font - mono font - bold ${timeLeft < 15 ? 'text-red-500 animate-pulse' : 'text-blue-400'} `}>
+
+                        {/* Income Stats Mobile */}
+                        <div className="flex items-center gap-3 mx-2">
+                            <div className="flex flex-col items-center">
+                                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider leading-none mb-0.5">Пассив</span>
+                                <span className="font-mono text-xs text-blue-400 font-bold">+${(me.passiveIncome || 0).toLocaleString()}</span>
+                            </div>
+                            <div className="h-6 w-px bg-slate-800"></div>
+                            <div className="flex flex-col items-center">
+                                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider leading-none mb-0.5">Net</span>
+                                <span className="font-mono text-xs text-green-400 font-bold">+${(me.cashflow || 0).toLocaleString()}</span>
+                            </div>
+                        </div>
+
+                        <div className="text-center min-w-[50px]">
+                            <div className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Turn</div>
+                            <div className={`text-sm font-mono font-bold ${timeLeft < 15 ? 'text-red-500 animate-pulse' : 'text-blue-400'}`}>
                                 {formatTime(timeLeft)}
                             </div>
                         </div>

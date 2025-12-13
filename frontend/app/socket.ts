@@ -29,8 +29,9 @@ const SOCKET_URL = getSocketUrl();
 export const socket = io(SOCKET_URL, {
     autoConnect: true,
     reconnection: true,
-    reconnectionAttempts: Infinity, // Never give up
-    reconnectionDelay: 2000,
-    // transports: ['websocket', 'polling'], // Removed to allow default Polling -> Upgrade strategy which is more stable
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    transports: ['polling', 'websocket'], // Match Backend: Polling first for robustness, upgrade to WS
     timeout: 20000,
 });
