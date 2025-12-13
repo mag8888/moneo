@@ -142,17 +142,17 @@ export class RoomService {
     }
 
     async getRooms(): Promise<any[]> {
-        const rooms = await RoomModel.find({ status: 'waiting' }).sort({ createdAt: -1 });
+        const rooms = await RoomModel.find({ status: 'waiting' }).sort({ createdAt: -1 }).lean();
         return rooms.map(r => this.sanitizeRoom(r));
     }
 
     async getActiveGames(): Promise<any[]> {
-        const rooms = await RoomModel.find({ status: 'playing' });
+        const rooms = await RoomModel.find({ status: 'playing' }).lean();
         return rooms.map(r => this.sanitizeRoom(r));
     }
 
     async getRoom(roomId: string): Promise<any> {
-        const room = await RoomModel.findById(roomId);
+        const room = await RoomModel.findById(roomId).lean();
         return room ? this.sanitizeRoom(room) : null;
     }
 
@@ -221,9 +221,12 @@ export class RoomService {
 
     // Helper to format room for frontend (convert _id to id)
     private sanitizeRoom(room: any): any {
-        const obj = room.toObject ? room.toObject() : room;
-        obj.id = obj._id.toString();
-        delete obj._id;
+        // Ensure we work with a plain object
+        const obj = room.toObject ? room.toObject() : { ...room };
+        if (obj._id) {
+            obj.id = obj._id.toString();
+            delete obj._id;
+        }
         delete obj.__v;
         return obj;
     }
