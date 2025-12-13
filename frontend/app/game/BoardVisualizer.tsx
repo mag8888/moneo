@@ -114,11 +114,17 @@ export const BoardVisualizer = ({ board, players, animatingPos, currentPlayerId 
                                 style={style}
                                 title={sq.name}
                             >
-                                <div className="flex flex-col items-center">
-                                    <span className="text-xl leading-none filter drop-shadow-md">{getSticker(sq.type, sq.name)}</span>
-                                    {sq.type === 'CASHFLOW' && <span className="text-emerald-400 font-bold tracking-tighter text-[6px]">Day</span>}
+                                <div className="flex flex-col items-center justify-between h-full py-1 w-full overflow-hidden">
+                                    <span className="text-[6px] xs:text-[7px] leading-tight text-center px-0.5 text-slate-200 font-medium line-clamp-2 h-6 flex items-center">{sq.name}</span>
+                                    <span className="text-lg leading-none filter drop-shadow-md my-0.5">{getSticker(sq.type, sq.name)}</span>
+
+                                    <div className="flex flex-col items-center leading-none space-y-0.5">
+                                        {sq.cost && <span className="text-[6px] text-red-300 font-mono">-${(sq.cost / 1000).toFixed(0)}k</span>}
+                                        {sq.cashflow && <span className="text-[6px] text-green-300 font-bold font-mono">+${(sq.cashflow / 1000).toFixed(0)}k</span>}
+                                        {sq.type === 'CASHFLOW' && <span className="text-emerald-400 font-bold tracking-tighter text-[6px]">Day</span>}
+                                    </div>
                                 </div>
-                                <span className="absolute top-0.5 right-0.5 text-[8px] font-bold text-slate-400 opacity-70">{sq.index}</span>
+                                <span className="absolute top-0.5 right-0.5 text-[6px] font-bold text-slate-500 opacity-50">{sq.index}</span>
                             </div>
                         );
                     })}

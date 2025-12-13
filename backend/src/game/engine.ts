@@ -581,6 +581,47 @@ export class GameEngine {
         }
 
         this.state.currentCard = card;
+
+        // Handle Mandatory Cards (Damages/Events)
+        if (card.mandatory) {
+            let cost = card.cost || 0;
+
+            // Special Logic Checks
+            if (card.title.includes('Roof Leak')) {
+                // Only pay if player owns property (Real Estate)
+                const hasProperty = player.assets.some(a => a.type === 'REAL_ESTATE' || a.title.includes('Condo') || a.title.includes('Plex') || a.title.includes('House'));
+                // Simple heuristic if type not yet populated on old assets: check cashflow > 0 or specific titles
+                if (!hasProperty && player.assets.length === 0) {
+                    cost = 0;
+                    this.state.log.push(`😅 ${card.title}: You own no property. You pay $0.`);
+                }
+            } else if (card.title.includes('Sewer')) {
+                // Usually sewer is also property related but user list didn't specify strict condition, typically implies ownership
+                // Assuming mandatory for simplicty unless standard rules say otherwise. User said "opportunity to fix" -> "You HAVE opportunity" usually means propery options.
+                // But generally damages are strictly tied to ownership. 
+                // Let's safe check assets > 0
+                if (player.assets.length === 0) {
+                    cost = 0;
+                    this.state.log.push(`😅 ${card.title}: You own no assets. You pay $0.`);
+                }
+            }
+
+            if (cost > 0) {
+                player.cash -= cost;
+                this.state.log.push(`💥 Mandatory Event: ${card.title}. Paid $${cost}.`);
+            }
+
+            // Auto discard and end phase?
+            // Actually, we should end phase or return to ACTION?
+            // Usually damages turn ends.
+            this.state.phase = 'ACTION'; // Or END? 
+            // If we set phase to ACTION, user has "Pass" button? 
+            // We should just clear card and effectively End Turn or allow standard end.
+            this.state.currentCard = undefined; // Card resolved
+            this.endTurn();
+            return;
+        }
+
         this.state.log.push(`${player.name} chose ${size} DEAL: ${card.title}`);
         this.state.phase = 'ACTION'; // Back to action phase to buy/pass
     }
@@ -623,7 +664,8 @@ export class GameEngine {
         const player = this.state.players.find(p => p.id === playerId);
         const card = this.state.currentCard;
 
-        if (!player || !card || card.type !== 'MARKET') return;
+        if (!player || !card) return;
+        if (card.type !== 'MARKET' && card.type !== 'DEAL_SMALL' && card.type !== 'DEAL_BIG') return;
 
         // Determine cost (Use Down Payment if available, else full cost)
         const costToPay = card.downPayment !== undefined ? card.downPayment : (card.cost || 0);
@@ -639,7 +681,9 @@ export class GameEngine {
         player.assets.push({
             title: card.title,
             cost: card.cost,
-            cashflow: card.cashflow || 0
+            cashflow: card.cashflow || 0,
+            symbol: card.symbol,
+            type: card.symbol ? 'STOCK' : 'REAL_ESTATE'
         });
 
         // Update Stats

@@ -160,6 +160,9 @@ export default function Lobby() {
                                 </p>
                                 <div className="mt-2 text-xs">
                                     ID: {room.id}
+                                    <div className="mt-1 text-slate-400">
+                                        Хост: <span className="text-slate-200 font-medium">{room.players[0]?.name || 'Неизвестно'}</span>
+                                    </div>
                                 </div>
                             </div>
                             <button
