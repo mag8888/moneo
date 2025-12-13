@@ -69,7 +69,7 @@ export const BankModal = ({ isOpen, onClose, player, roomId, transactions, playe
                 </button>
 
                 {/* LEFT PANEL: Bank Status & Loan */}
-                <div className="w-full md:w-1/3 bg-slate-900/60 p-8 flex flex-col gap-6 border-r border-slate-700/50 relative overflow-hidden">
+                <div className="w-full md:w-1/3 bg-slate-900/60 p-8 flex flex-col gap-6 border-r border-slate-700/50 relative overflow-y-auto custom-scrollbar">
                     <div className="absolute inset-0 bg-gradient-to-b from-slate-800/20 to-transparent pointer-events-none"></div>
 
                     <button onClick={onClose} className="hidden md:flex items-center gap-2 absolute top-6 left-6 text-slate-500 hover:text-white transition-colors text-xs font-bold uppercase tracking-widest z-10">

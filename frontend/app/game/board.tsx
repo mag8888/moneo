@@ -364,15 +364,49 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
 
             {/* ℹ️ SQUARE INFO POPUP */}
             {squareInfo && (
-                <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-[90] animate-in slide-in-from-top duration-500">
-                    <div className="bg-slate-900/90 backdrop-blur-md border border-slate-700/50 p-6 rounded-2xl shadow-2xl flex flex-col items-center gap-2 min-w-[300px]">
-                        <div className="text-4xl filter drop-shadow-md">
-                            {['MARKET', 'OPPORTUNITY'].includes(squareInfo.type) ? '⚡' : '📍'}
+                <div className="absolute inset-0 z-[90] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setSquareInfo(null)}>
+                    <div className="bg-[#1e293b] border border-slate-600 p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center relative overflow-hidden" onClick={e => e.stopPropagation()}>
+                        {/* Gradient Line */}
+                        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+
+                        {/* Close Button */}
+                        <button onClick={() => setSquareInfo(null)} className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">✕</button>
+
+                        <div className="text-6xl mb-6 filter drop-shadow-lg animate-bounce-short">
+                            {['MARKET', 'OPPORTUNITY', 'DEAL'].includes(squareInfo.type) ? '⚡' :
+                                squareInfo.type === 'BABY' ? '👶' :
+                                    squareInfo.type === 'PAYDAY' ? '💰' :
+                                        squareInfo.type === 'DOWNSIZED' ? '📉' :
+                                            squareInfo.type === 'CHARITY' ? '❤️' : '📍'}
                         </div>
-                        <h3 className="text-xl font-bold text-white uppercase tracking-wider">{squareInfo.name}</h3>
-                        <p className="text-slate-400 text-xs text-center max-w-[200px]">
-                            You landed on {squareInfo.name}.
-                        </p>
+
+                        <h3 className="text-2xl font-black text-white uppercase tracking-wider mb-2">{squareInfo.name || squareInfo.type}</h3>
+
+                        <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800 mb-6">
+                            {squareInfo.cost ? (
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-xs text-slate-500 uppercase font-bold">Стоимость / Платеж</span>
+                                    <span className="text-2xl font-mono text-red-400 font-bold">-${squareInfo.cost.toLocaleString()}</span>
+                                </div>
+                            ) : squareInfo.cashflow ? (
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-xs text-slate-500 uppercase font-bold">Денежный поток</span>
+                                    <span className="text-2xl font-mono text-green-400 font-bold">+${squareInfo.cashflow.toLocaleString()}</span>
+                                </div>
+                            ) : (
+                                <span className="text-slate-400 italic text-sm">Нет стоимости</span>
+                            )}
+                        </div>
+
+                        {squareInfo.description && (
+                            <p className="text-slate-400 text-sm mb-6 bg-slate-800/30 p-3 rounded-lg border border-slate-700/30">
+                                {squareInfo.description}
+                            </p>
+                        )}
+
+                        <button onClick={() => setSquareInfo(null)} className="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 rounded-xl shadow-lg transition-transform hover:-translate-y-0.5 active:scale-95">
+                            Закрыть
+                        </button>
                     </div>
                 </div>
             )}
@@ -477,6 +511,7 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                             players={state.players}
                             animatingPos={animatingPos}
                             currentPlayerId={currentPlayer.id}
+                            onSquareClick={(sq: any) => setSquareInfo(sq)} // Re-using squareInfo state for click popup
                         />
 
                         {/* Action Card Overlay */}

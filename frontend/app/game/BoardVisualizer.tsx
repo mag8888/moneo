@@ -50,7 +50,7 @@ const getGradient = (type: string, isFT: boolean) => {
     return 'bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700';
 };
 
-export const BoardVisualizer = ({ board, players, animatingPos, currentPlayerId }: any) => {
+export const BoardVisualizer = ({ board, players, animatingPos, currentPlayerId, onSquareClick }: any) => {
 
     // Helper: Is Fast Track?
     const isFastTrackSquare = (index: number) => index >= 24;
@@ -108,10 +108,11 @@ export const BoardVisualizer = ({ board, players, animatingPos, currentPlayerId 
                         return (
                             <div
                                 key={sq.index}
+                                onClick={() => onSquareClick && onSquareClick(sq)}
                                 className={`
                                     ${gradient} border border-slate-800/50 backdrop-blur-sm rounded-sm
                                     flex items-center justify-center text-[10px]
-                                    opacity-90 shadow-lg pointer-events-auto transition-all hover:scale-110 hover:z-20
+                                    opacity-90 shadow-lg pointer-events-auto transition-all hover:scale-110 hover:z-20 cursor-pointer
                                 `}
                                 style={style}
                                 title={sq.name}
@@ -149,10 +150,11 @@ export const BoardVisualizer = ({ board, players, animatingPos, currentPlayerId 
                         return (
                             <div
                                 key={sq.index}
+                                onClick={() => onSquareClick && onSquareClick(sq)}
                                 className={`
                                     w-[13%] h-[13%] rounded-xl shadow-xl border
                                     flex items-center justify-center pointer-events-auto
-                                    transition-all hover:scale-125 hover:z-50 duration-300
+                                    transition-all hover:scale-125 hover:z-50 duration-300 cursor-pointer
                                     ${gradient}
                                 `}
                                 style={style as React.CSSProperties}
