@@ -1092,7 +1092,7 @@ export class GameEngine {
             // "Buy 1-100k". If I buy 50, can I buy another 50?
             // Usually Turn ends after buying.
             this.state.currentCard = undefined;
-            this.endTurn();
+            this.state.phase = 'ACTION';
             return;
         }
 
@@ -1118,9 +1118,33 @@ export class GameEngine {
             card.title = `${card.title} (${partners} Partners)`;
 
             this.state.log.push(`🎲 Rolled ${partners}! Recruited ${partners} partners.`);
-        }
 
-        player.cash -= costToPay;
+            player.cash -= costToPay;
+
+            // Add Asset
+            player.assets.push({
+                title: card.title,
+                cost: card.cost,
+                cashflow: card.cashflow || 0,
+                symbol: card.symbol,
+                type: card.symbol ? 'STOCK' : 'REAL_ESTATE',
+                quantity: 1,
+                businessType: card.businessType // Store business type
+            });
+
+            // Update Stats
+            if (card.cashflow) {
+                player.passiveIncome += card.cashflow;
+                player.income = player.salary + player.passiveIncome;
+                player.cashflow = player.income - player.expenses;
+            }
+
+            // Clear card
+            this.state.currentCard = undefined;
+            this.state.phase = 'ACTION';
+
+            return { mlmRoll: partners, mlmCashflow: totalCashflow };
+        }
 
         // Handle Expense Payment (No Asset added)
         if (card.type === 'EXPENSE') {
@@ -1160,7 +1184,8 @@ export class GameEngine {
         this.state.currentCard = undefined;
 
         this.checkFastTrackCondition(player);
-        this.endTurn();
+        // Do NOT end turn. Allow player to continue actions.
+        this.state.phase = 'ACTION';
     }
 
     sellStock(playerId: string, quantity: number) {

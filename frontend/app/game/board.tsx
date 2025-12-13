@@ -76,7 +76,8 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
     // Animation & Popup States
     const [showDice, setShowDice] = useState(false);
     const [diceValue, setDiceValue] = useState<number | null>(null);
-    const [pendingState, setPendingState] = useState<any>(null);
+    const [mlmMessage, setMlmMessage] = useState<string | null>(null);
+    const [pendingState, setPendingState] = useState<any | null>(null);
     const [squareInfo, setSquareInfo] = useState<any>(null);
     const [babyNotification, setBabyNotification] = useState<string | null>(null);
 
@@ -150,6 +151,19 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
 
     useEffect(() => {
         socket.on('dice_rolled', (data) => {
+            if (data.type === 'MLM') {
+                setDiceValue(data.roll);
+                setShowDice(true);
+                setMlmMessage(data.message);
+
+                setTimeout(() => {
+                    setShowDice(false);
+                    setMlmMessage(null);
+                    if (data.state) setState(data.state);
+                }, 4000);
+                return;
+            }
+
             setDiceValue(data.roll);
             setShowDice(true);
             setPendingState(data.state); // Store full state for later
@@ -298,210 +312,219 @@ export default function GameBoard({ roomId, initialState }: BoardProps) {
                                 {diceValue}
                             </div>
                         )}
+                        {mlmMessage && (
+                            <div className="mt-4 bg-green-500/20 text-green-400 px-6 py-3 rounded-xl border border-green-500/50 text-xl font-bold animate-in fade-in zoom-in duration-300">
+                                {mlmMessage}
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
 
             {/* 📱 MOBILE MENU OVERLAY */}
-            {showMobileMenu && (
-                <div className="lg:hidden absolute inset-0 z-[60] bg-[#0f172a]/95 backdrop-blur-xl p-4 flex flex-col gap-4 overflow-y-auto animate-in slide-in-from-left duration-300">
-                    <div className="flex justify-between items-center mb-2">
-                        <h2 className="text-2xl font-black text-white uppercase tracking-wider">Меню</h2>
-                        <button onClick={() => setShowMobileMenu(false)} className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400">✕</button>
-                    </div>
+            {
+                showMobileMenu && (
+                    <div className="lg:hidden absolute inset-0 z-[60] bg-[#0f172a]/95 backdrop-blur-xl p-4 flex flex-col gap-4 overflow-y-auto animate-in slide-in-from-left duration-300">
+                        <div className="flex justify-between items-center mb-2">
+                            <h2 className="text-2xl font-black text-white uppercase tracking-wider">Меню</h2>
+                            <button onClick={() => setShowMobileMenu(false)} className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400">✕</button>
+                        </div>
 
-                    {/* Profile Section */}
-                    <div className="bg-[#1e293b] rounded-2xl p-5 border border-slate-700/50 shadow-lg">
-                        <div className="flex items-center gap-4 mb-4">
-                            <span className="text-4xl">👷</span>
-                            <div>
-                                <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Профессия</span>
-                                <div className="text-xl font-bold text-white">{me.professionName || 'Выбор...'}</div>
+                        {/* Profile Section */}
+                        <div className="bg-[#1e293b] rounded-2xl p-5 border border-slate-700/50 shadow-lg">
+                            <div className="flex items-center gap-4 mb-4">
+                                <span className="text-4xl">👷</span>
+                                <div>
+                                    <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Профессия</span>
+                                    <div className="text-xl font-bold text-white">{me.professionName || 'Выбор...'}</div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3 mb-4">
+                                <div className="bg-[#0B0E14]/50 p-3 rounded-xl border border-slate-800">
+                                    <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Баланс</div>
+                                    <div className="font-mono text-xl text-green-400 font-bold">${me.cash?.toLocaleString()}</div>
+                                </div>
+                                <div className="bg-[#0B0E14]/50 p-3 rounded-xl border border-slate-800">
+                                    <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Кредит</div>
+                                    <div className="font-mono text-xl text-red-400 font-bold">${me.loanDebt?.toLocaleString()}</div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="bg-[#0B0E14]/30 p-2.5 rounded-lg border border-slate-800/50">
+                                    <div className="text-[9px] text-slate-500 uppercase tracking-wider">Доход</div>
+                                    <div className="font-mono text-slate-300 font-medium">${me.income?.toLocaleString()}</div>
+                                </div>
+                                <div className="bg-[#0B0E14]/30 p-2.5 rounded-lg border border-slate-800/50">
+                                    <div className="text-[9px] text-slate-500 uppercase tracking-wider">Расходы</div>
+                                    <div className="font-mono text-slate-300 font-medium">${me.expenses?.toLocaleString()}</div>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3 mb-4">
-                            <div className="bg-[#0B0E14]/50 p-3 rounded-xl border border-slate-800">
-                                <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Баланс</div>
-                                <div className="font-mono text-xl text-green-400 font-bold">${me.cash?.toLocaleString()}</div>
-                            </div>
-                            <div className="bg-[#0B0E14]/50 p-3 rounded-xl border border-slate-800">
-                                <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Кредит</div>
-                                <div className="font-mono text-xl text-red-400 font-bold">${me.loanDebt?.toLocaleString()}</div>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="bg-[#0B0E14]/30 p-2.5 rounded-lg border border-slate-800/50">
-                                <div className="text-[9px] text-slate-500 uppercase tracking-wider">Доход</div>
-                                <div className="font-mono text-slate-300 font-medium">${me.income?.toLocaleString()}</div>
-                            </div>
-                            <div className="bg-[#0B0E14]/30 p-2.5 rounded-lg border border-slate-800/50">
-                                <div className="text-[9px] text-slate-500 uppercase tracking-wider">Расходы</div>
-                                <div className="font-mono text-slate-300 font-medium">${me.expenses?.toLocaleString()}</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Assets Section */}
-                    <div className="bg-[#1e293b] rounded-2xl p-5 border border-slate-700/50 shadow-lg">
-                        <h3 className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mb-4 flex items-center justify-between gap-2">
-                            <span className="flex items-center gap-2"><span>🏠</span> Ваши Активы</span>
-                            <span className="font-mono text-green-400">+${totalAssetYield}</span>
-                        </h3>
-                        {me.assets?.length > 0 ? (
-                            <div className="space-y-2">
-                                {me.assets.map((a: any, i: number) => (
-                                    <div key={i} className="flex justify-between items-center text-xs p-3 bg-slate-900/50 rounded-xl border border-slate-800/50">
-                                        <div className="flex flex-col">
-                                            <span className="text-slate-300 font-medium">{a.title}</span>
-                                            <span className="font-mono text-green-400 font-bold text-[10px]">+${a.cashflow}</span>
+                        {/* Assets Section */}
+                        <div className="bg-[#1e293b] rounded-2xl p-5 border border-slate-700/50 shadow-lg">
+                            <h3 className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mb-4 flex items-center justify-between gap-2">
+                                <span className="flex items-center gap-2"><span>🏠</span> Ваши Активы</span>
+                                <span className="font-mono text-green-400">+${totalAssetYield}</span>
+                            </h3>
+                            {me.assets?.length > 0 ? (
+                                <div className="space-y-2">
+                                    {me.assets.map((a: any, i: number) => (
+                                        <div key={i} className="flex justify-between items-center text-xs p-3 bg-slate-900/50 rounded-xl border border-slate-800/50">
+                                            <div className="flex flex-col">
+                                                <span className="text-slate-300 font-medium">{a.title}</span>
+                                                <span className="font-mono text-green-400 font-bold text-[10px]">+${a.cashflow}</span>
+                                            </div>
+                                            <button
+                                                onClick={() => setTransferAssetItem({ item: a, index: i })}
+                                                className="ml-2 p-1.5 hover:bg-slate-700/50 rounded-lg transition-colors text-slate-500 hover:text-blue-400"
+                                                title="Передать актив"
+                                            >
+                                                ➡️
+                                            </button>
                                         </div>
-                                        <button
-                                            onClick={() => setTransferAssetItem({ item: a, index: i })}
-                                            className="ml-2 p-1.5 hover:bg-slate-700/50 rounded-lg transition-colors text-slate-500 hover:text-blue-400"
-                                            title="Передать актив"
-                                        >
-                                            ➡️
-                                        </button>
+                                    ))}
+                                </div>
+                            ) : <div className="text-xs text-slate-600 text-center py-4 italic">Нет активов</div>}
+                        </div>
+
+                        {/* Players List Section */}
+                        <div className="bg-[#1e293b] rounded-2xl p-5 border border-slate-700/50 shadow-lg">
+                            <h3 className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mb-4 flex items-center gap-2">
+                                <span>👥</span> Игроки
+                            </h3>
+                            <div className="space-y-2">
+                                {state.players.map((p: any) => (
+                                    <div key={p.id} className={`flex items - center gap - 3 p - 3 rounded - xl border transition - all ${p.id === currentPlayer.id ? 'bg-slate-800/80 border-blue-500/50 shadow-lg shadow-blue-900/10' : 'bg-slate-900/30 border-slate-800/50'} `}>
+                                        <div className="text-lg bg-slate-950 w-8 h-8 flex items-center justify-center rounded-xl border border-slate-800 shadow-inner">{p.token}</div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-sm font-bold text-slate-200 truncate">{p.name}</div>
+                                            <div className="text-[10px] text-slate-500 font-mono">${p.cash?.toLocaleString()}</div>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
-                        ) : <div className="text-xs text-slate-600 text-center py-4 italic">Нет активов</div>}
-                    </div>
-
-                    {/* Players List Section */}
-                    <div className="bg-[#1e293b] rounded-2xl p-5 border border-slate-700/50 shadow-lg">
-                        <h3 className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mb-4 flex items-center gap-2">
-                            <span>👥</span> Игроки
-                        </h3>
-                        <div className="space-y-2">
-                            {state.players.map((p: any) => (
-                                <div key={p.id} className={`flex items - center gap - 3 p - 3 rounded - xl border transition - all ${p.id === currentPlayer.id ? 'bg-slate-800/80 border-blue-500/50 shadow-lg shadow-blue-900/10' : 'bg-slate-900/30 border-slate-800/50'} `}>
-                                    <div className="text-lg bg-slate-950 w-8 h-8 flex items-center justify-center rounded-xl border border-slate-800 shadow-inner">{p.token}</div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="text-sm font-bold text-slate-200 truncate">{p.name}</div>
-                                        <div className="text-[10px] text-slate-500 font-mono">${p.cash?.toLocaleString()}</div>
-                                    </div>
-                                </div>
-                            ))}
                         </div>
+
+                        {/* Exit Button in Menu */}
+                        <button
+                            onClick={handleExit}
+                            className="w-full py-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 font-bold uppercase tracking-widest text-sm hover:bg-red-500/20 active:bg-red-500/30 transition-all flex items-center justify-center gap-3"
+                        >
+                            <span>🚪</span> Выйти из игры
+                        </button>
+
+                        {/* Spacer for bottom nav */}
+                        <div className="h-20"></div>
                     </div>
-
-                    {/* Exit Button in Menu */}
-                    <button
-                        onClick={handleExit}
-                        className="w-full py-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 font-bold uppercase tracking-widest text-sm hover:bg-red-500/20 active:bg-red-500/30 transition-all flex items-center justify-center gap-3"
-                    >
-                        <span>🚪</span> Выйти из игры
-                    </button>
-
-                    {/* Spacer for bottom nav */}
-                    <div className="h-20"></div>
-                </div>
-            )}
+                )
+            }
 
 
 
             {/* ℹ️ SQUARE INFO POPUP */}
-            {squareInfo && (
-                <div className="absolute inset-0 z-[90] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setSquareInfo(null)}>
-                    <div className="bg-[#1e293b] border border-slate-600 p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center relative overflow-hidden" onClick={e => e.stopPropagation()}>
-                        {/* Gradient Line handled by helper */}
-                        <div className={`absolute top-0 left-0 w-full h-2 bg-gradient-to-r ${['DREAM'].includes(squareInfo.type) ? 'from-fuchsia-600 to-purple-600' :
-                            ['BUSINESS', 'MARKET', 'DEAL', 'OPPORTUNITY'].includes(squareInfo.type) ? 'from-emerald-500 to-green-600' :
-                                ['LOSS', 'EXPENSE', 'DOODAD', 'DOWNSIZED', 'TAX'].includes(squareInfo.type) ? 'from-red-700 to-rose-900' :
-                                    squareInfo.type === 'PAYDAY' ? 'from-yellow-500 to-amber-500' :
-                                        squareInfo.type === 'BABY' ? 'from-pink-400 to-blue-400' :
-                                            'from-blue-500 to-indigo-500' // Default
-                            }`}></div>
+            {
+                squareInfo && (
+                    <div className="absolute inset-0 z-[90] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setSquareInfo(null)}>
+                        <div className="bg-[#1e293b] border border-slate-600 p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center relative overflow-hidden" onClick={e => e.stopPropagation()}>
+                            {/* Gradient Line handled by helper */}
+                            <div className={`absolute top-0 left-0 w-full h-2 bg-gradient-to-r ${['DREAM'].includes(squareInfo.type) ? 'from-fuchsia-600 to-purple-600' :
+                                ['BUSINESS', 'MARKET', 'DEAL', 'OPPORTUNITY'].includes(squareInfo.type) ? 'from-emerald-500 to-green-600' :
+                                    ['LOSS', 'EXPENSE', 'DOODAD', 'DOWNSIZED', 'TAX'].includes(squareInfo.type) ? 'from-red-700 to-rose-900' :
+                                        squareInfo.type === 'PAYDAY' ? 'from-yellow-500 to-amber-500' :
+                                            squareInfo.type === 'BABY' ? 'from-pink-400 to-blue-400' :
+                                                'from-blue-500 to-indigo-500' // Default
+                                }`}></div>
 
-                        {/* Close Button */}
-                        <button onClick={() => setSquareInfo(null)} className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">✕</button>
+                            {/* Close Button */}
+                            <button onClick={() => setSquareInfo(null)} className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">✕</button>
 
-                        <div className="text-6xl mb-6 filter drop-shadow-lg animate-bounce-short">
-                            {['MARKET', 'OPPORTUNITY', 'DEAL'].includes(squareInfo.type) ? '⚡' :
-                                squareInfo.type === 'BABY' ? '👶' :
-                                    squareInfo.type === 'PAYDAY' ? '💰' :
-                                        squareInfo.type === 'DOWNSIZED' ? '📉' :
-                                            squareInfo.type === 'CHARITY' ? '❤️' :
-                                                squareInfo.type === 'DREAM' ? '✨' :
-                                                    squareInfo.type === 'BUSINESS' ? '🏢' :
-                                                        ['LOSS', 'EXPENSE', 'DOODAD'].includes(squareInfo.type) ? '💸' : '📍'}
-                        </div>
+                            <div className="text-6xl mb-6 filter drop-shadow-lg animate-bounce-short">
+                                {['MARKET', 'OPPORTUNITY', 'DEAL'].includes(squareInfo.type) ? '⚡' :
+                                    squareInfo.type === 'BABY' ? '👶' :
+                                        squareInfo.type === 'PAYDAY' ? '💰' :
+                                            squareInfo.type === 'DOWNSIZED' ? '📉' :
+                                                squareInfo.type === 'CHARITY' ? '❤️' :
+                                                    squareInfo.type === 'DREAM' ? '✨' :
+                                                        squareInfo.type === 'BUSINESS' ? '🏢' :
+                                                            ['LOSS', 'EXPENSE', 'DOODAD'].includes(squareInfo.type) ? '💸' : '📍'}
+                            </div>
 
-                        <h3 className="text-2xl font-black text-white uppercase tracking-wider mb-2">{squareInfo.name || squareInfo.type}</h3>
+                            <h3 className="text-2xl font-black text-white uppercase tracking-wider mb-2">{squareInfo.name || squareInfo.type}</h3>
 
-                        <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800 mb-6 flex flex-col gap-2">
-                            {squareInfo.type === 'PAYDAY' ? (
-                                <div className="text-center py-2">
-                                    <div className="text-xs text-slate-500 uppercase font-bold mb-1">Ваш доход</div>
-                                    <div className="text-3xl font-mono text-green-400 font-bold p-2 bg-green-900/10 rounded-xl border border-green-500/20 shadow-lg shadow-green-900/20">
-                                        +${me.cashflow?.toLocaleString()}
+                            <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800 mb-6 flex flex-col gap-2">
+                                {squareInfo.type === 'PAYDAY' ? (
+                                    <div className="text-center py-2">
+                                        <div className="text-xs text-slate-500 uppercase font-bold mb-1">Ваш доход</div>
+                                        <div className="text-3xl font-mono text-green-400 font-bold p-2 bg-green-900/10 rounded-xl border border-green-500/20 shadow-lg shadow-green-900/20">
+                                            +${me.cashflow?.toLocaleString()}
+                                        </div>
+                                        <div className="text-slate-400 text-xs mt-2 italic">Начислено на баланс</div>
                                     </div>
-                                    <div className="text-slate-400 text-xs mt-2 italic">Начислено на баланс</div>
-                                </div>
-                            ) : (
-                                <>
-                                    {/* Cost */}
-                                    {squareInfo.cost !== undefined && squareInfo.cost !== null && (
-                                        <div className="flex justify-between items-center border-b border-slate-800/50 pb-2 last:border-0 last:pb-0">
-                                            <span className="text-xs text-slate-500 uppercase font-bold">Стоимость</span>
-                                            <span className="text-xl font-mono text-red-400 font-bold">-${squareInfo.cost.toLocaleString()}</span>
-                                        </div>
-                                    )}
+                                ) : (
+                                    <>
+                                        {/* Cost */}
+                                        {squareInfo.cost !== undefined && squareInfo.cost !== null && (
+                                            <div className="flex justify-between items-center border-b border-slate-800/50 pb-2 last:border-0 last:pb-0">
+                                                <span className="text-xs text-slate-500 uppercase font-bold">Стоимость</span>
+                                                <span className="text-xl font-mono text-red-400 font-bold">-${squareInfo.cost.toLocaleString()}</span>
+                                            </div>
+                                        )}
 
-                                    {/* Cashflow / Income */}
-                                    {squareInfo.cashflow !== undefined && squareInfo.cashflow !== null && (
-                                        <div className="flex justify-between items-center border-b border-slate-800/50 pb-2 last:border-0 last:pb-0">
-                                            <span className="text-xs text-slate-500 uppercase font-bold">Доход</span>
-                                            <span className="text-xl font-mono text-green-400 font-bold">+${squareInfo.cashflow.toLocaleString()}</span>
-                                        </div>
-                                    )}
+                                        {/* Cashflow / Income */}
+                                        {squareInfo.cashflow !== undefined && squareInfo.cashflow !== null && (
+                                            <div className="flex justify-between items-center border-b border-slate-800/50 pb-2 last:border-0 last:pb-0">
+                                                <span className="text-xs text-slate-500 uppercase font-bold">Доход</span>
+                                                <span className="text-xl font-mono text-green-400 font-bold">+${squareInfo.cashflow.toLocaleString()}</span>
+                                            </div>
+                                        )}
 
-                                    {/* Fallback if neither */}
-                                    {!squareInfo.cost && !squareInfo.cashflow && (
-                                        <div className="text-center">
-                                            {isMyTurn && squareInfo.type === 'DEAL' ? (
-                                                <div className="flex gap-2 mt-4">
-                                                    <button
-                                                        onClick={() => socket.emit('draw_deal', { roomId, type: 'SMALL' })}
-                                                        className="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl shadow-lg transition-transform active:scale-95 flex flex-col items-center"
-                                                    >
-                                                        <span>Малая сделка</span>
-                                                        <span className="text-[10px] opacity-70">До $5,000</span>
-                                                    </button>
-                                                    <button
-                                                        onClick={() => socket.emit('draw_deal', { roomId, type: 'BIG' })}
-                                                        className="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 rounded-xl shadow-lg transition-transform active:scale-95 flex flex-col items-center"
-                                                    >
-                                                        <span>Крупная сделка</span>
-                                                        <span className="text-[10px] opacity-70">От $6,000</span>
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <span className="text-slate-400 italic text-sm block py-2">
-                                                    {squareInfo.description ? 'Следуйте инструкциям на карточке' : 'Информация отсутствует'}
-                                                </span>
-                                            )}
-                                        </div>
-                                    )}
-                                </>
+                                        {/* Fallback if neither */}
+                                        {!squareInfo.cost && !squareInfo.cashflow && (
+                                            <div className="text-center">
+                                                {isMyTurn && squareInfo.type === 'DEAL' ? (
+                                                    <div className="flex gap-2 mt-4">
+                                                        <button
+                                                            onClick={() => socket.emit('draw_deal', { roomId, type: 'SMALL' })}
+                                                            className="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl shadow-lg transition-transform active:scale-95 flex flex-col items-center"
+                                                        >
+                                                            <span>Малая сделка</span>
+                                                            <span className="text-[10px] opacity-70">До $5,000</span>
+                                                        </button>
+                                                        <button
+                                                            onClick={() => socket.emit('draw_deal', { roomId, type: 'BIG' })}
+                                                            className="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 rounded-xl shadow-lg transition-transform active:scale-95 flex flex-col items-center"
+                                                        >
+                                                            <span>Крупная сделка</span>
+                                                            <span className="text-[10px] opacity-70">От $6,000</span>
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-slate-400 italic text-sm block py-2">
+                                                        {squareInfo.description ? 'Следуйте инструкциям на карточке' : 'Информация отсутствует'}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+
+                            {squareInfo.description && (
+                                <p className="text-slate-400 text-sm mb-6 bg-slate-800/30 p-3 rounded-lg border border-slate-700/30">
+                                    {squareInfo.description}
+                                </p>
                             )}
+
+                            <button onClick={() => setSquareInfo(null)} className="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 rounded-xl shadow-lg transition-transform hover:-translate-y-0.5 active:scale-95">
+                                Закрыть
+                            </button>
                         </div>
-
-                        {squareInfo.description && (
-                            <p className="text-slate-400 text-sm mb-6 bg-slate-800/30 p-3 rounded-lg border border-slate-700/30">
-                                {squareInfo.description}
-                            </p>
-                        )}
-
-                        <button onClick={() => setSquareInfo(null)} className="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 rounded-xl shadow-lg transition-transform hover:-translate-y-0.5 active:scale-95">
-                            Закрыть
-                        </button>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* MAIN GRID */}
             <div className="flex-1 w-full max-w-[1920px] mx-auto p-2 lg:p-4 grid grid-cols-1 lg:grid-cols-[380px_1fr_300px] gap-2 lg:gap-4 h-[calc(100vh-80px)] lg:h-screen lg:max-h-screen overflow-hidden">

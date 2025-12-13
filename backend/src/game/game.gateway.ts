@@ -273,8 +273,17 @@ export class GameGateway {
                 const game = this.games.get(roomId);
                 if (game) {
                     try {
-                        game.buyAsset(socket.id, quantity);
+                        const result: any = game.buyAsset(socket.id, quantity);
                         const state = game.getState();
+
+                        if (result && result.mlmRoll) {
+                            this.io.to(roomId).emit('dice_rolled', {
+                                roll: result.mlmRoll,
+                                state,
+                                type: 'MLM',
+                                message: `Recruited ${result.mlmRoll} Partners! +$${result.mlmCashflow}/mo`
+                            });
+                        }
                         this.io.to(roomId).emit('state_updated', { state });
                         saveState(roomId, game);
                     } catch (e: any) {
