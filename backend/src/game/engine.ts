@@ -248,14 +248,34 @@ export class GameEngine {
     }
 
     private checkFastTrackCondition(player: PlayerState) {
-        // "passive income covers expenses * 2 AND loans usually 0"
-        if (player.passiveIncome >= player.expenses * 2 && player.loanDebt === 0) {
+        if (player.isFastTrack) return;
+
+        // Condition: Passive Income > Expenses AND 2 Businesses (Classic or Network)
+        const businessCount = player.assets.filter((a: any) =>
+            a.businessType === 'CLASSIC' || a.businessType === 'NETWORK'
+        ).length;
+
+        if (player.passiveIncome > player.expenses && businessCount >= 2) {
             // Transition
             player.isFastTrack = true;
             player.position = 0; // Reset to start of Outer Track
             player.charityTurns = 0; // Reset charity status on entry
-            player.cash += 100000; // Bonus for exiting?
-            this.state.log.push(`🚀 ${player.name} ENTERED FAST TRACK!`);
+
+            const oldPassive = player.passiveIncome;
+
+            // "Cash zeros"
+            player.cash = 0;
+
+            // "Only passive income accrues which is equal to small track passive income * 10"
+            player.passiveIncome = oldPassive * 10;
+            player.salary = 0; // Fast Track replaces salary
+            player.income = player.passiveIncome;
+
+            // Assume expenses are cleared appropriately for Fast Track entry (or set to 0 as implied "Financial Freedom")
+            player.expenses = 0;
+            player.cashflow = player.income;
+
+            this.state.log.push(`🚀 ${player.name} ENTERED FAST TRACK! (Flow: $${player.cashflow})`);
         }
     }
 
@@ -1051,7 +1071,8 @@ export class GameEngine {
             cashflow: card.cashflow || 0,
             symbol: card.symbol,
             type: card.symbol ? 'STOCK' : 'REAL_ESTATE',
-            quantity: 1
+            quantity: 1,
+            businessType: card.businessType // Store business type
         });
 
         // Update Stats
